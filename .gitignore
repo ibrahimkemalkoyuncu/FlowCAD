@@ -1,0 +1,20 @@
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.csproj.user
+
+# ASP.NET Core
+bin/
+obj/
+appsettings.Development.json
+
+# React
+node_modules/
+/build
+/.env
+
+# SQL Server
+*.mdf
+*.ldf
+App_Data/

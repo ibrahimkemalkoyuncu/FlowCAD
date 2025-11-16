@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36705.20 d17.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlowCAD.Api", "FlowCAD.Api\FlowCAD.Api.csproj", "{5FA13C33-DD5A-43CF-8C97-3DD1E30D10FB}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5FA13C33-DD5A-43CF-8C97-3DD1E30D10FB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5FA13C33-DD5A-43CF-8C97-3DD1E30D10FB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5FA13C33-DD5A-43CF-8C97-3DD1E30D10FB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5FA13C33-DD5A-43CF-8C97-3DD1E30D10FB}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {6C8D41F5-D72A-4BE1-9524-4B793C1E7E2B}
+	EndGlobalSection
+EndGlobal
