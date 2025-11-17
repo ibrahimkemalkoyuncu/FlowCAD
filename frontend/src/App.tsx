@@ -1,35 +1,34 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+// ============================================
+// 11. src/App.tsx
+// ============================================
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { ProjectList } from './components/ProjectList';
+import { EditorPage } from './pages/EditorPage';
+import { useProjectStore } from './store/useProjectStore';
 
 function App() {
-  const [count, setCount] = useState(0)
+  const { setCurrentProject } = useProjectStore();
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <BrowserRouter>
+      <div className="min-h-screen bg-gray-50">
+        <Routes>
+          <Route 
+            path="/" 
+            element={
+              <ProjectList 
+                onSelect={(project) => {
+                  setCurrentProject(project);
+                  window.location.href = '/editor';
+                }} 
+              />
+            } 
+          />
+          <Route path="/editor" element={<EditorPage />} />
+        </Routes>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    </BrowserRouter>
+  );
 }
 
-export default App
+export default App;
