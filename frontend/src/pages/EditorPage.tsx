@@ -1,15 +1,84 @@
 import React, { useState } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { SceneContent } from '../components/InteractiveScene3D';  // ✅ SceneContent kullanın
+import { SceneContent } from '../components/InteractiveScene3D';
 import { EnhancedToolbar } from '../components/EnhancedToolbar';
 import { MaterialCalculator } from '../components/MaterialCalculator';
 import { BlueprintPanel } from '../components/BlueprintPanel';
 import { PropertyPanel } from '../components/PropertyPanel';
 import { DWGLayerManager } from '../components/DWGLayerManager';
+import toast from 'react-hot-toast'; // ✅ YENİ EKLEME
 
 export const EditorPage: React.FC = () => {
   const [showMaterials, setShowMaterials] = useState(false);
   const [showBlueprints, setShowBlueprints] = useState(false);
+
+  const handleProjectManagerClick = () => {
+    // ✅ Toast ile onaylama
+    toast((t) => (
+      <div className="text-center">
+        <p className="font-medium mb-3">Ana sayfaya dönmek istediğinizden emin misiniz?</p>
+        <p className="text-sm text-gray-600 mb-4">Kaydedilmemiş değişiklikler kaybolacak.</p>
+        <div className="flex gap-2 justify-center">
+          <button
+            onClick={() => {
+              window.location.href = '/';
+              toast.dismiss(t.id);
+            }}
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium"
+          >
+            Evet, Dön
+          </button>
+          <button
+            onClick={() => toast.dismiss(t.id)}
+            className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors font-medium"
+          >
+            İptal
+          </button>
+        </div>
+      </div>
+    ), { 
+      duration: Infinity,
+      style: {
+        background: '#fff',
+        color: '#000',
+        padding: '20px',
+      }
+    });
+  };
+
+  const handleNewProject = () => {
+    // ✅ Toast ile onaylama
+    toast((t) => (
+      <div className="text-center">
+        <p className="font-medium mb-3">Yeni proje oluşturulsun mu?</p>
+        <p className="text-sm text-gray-600 mb-4">Mevcut çalışma kaybolacak.</p>
+        <div className="flex gap-2 justify-center">
+          <button
+            onClick={() => {
+              window.location.reload();
+              toast.dismiss(t.id);
+            }}
+            className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-medium"
+          >
+            Yeni Proje
+          </button>
+          <button
+            onClick={() => toast.dismiss(t.id)}
+            className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors font-medium"
+          >
+            İptal
+          </button>
+        </div>
+      </div>
+    ), { 
+      duration: Infinity,
+      style: {
+        background: '#fff',
+        color: '#000',
+        padding: '20px',
+      }
+    });
+  };
 
   return (
     <div className="h-screen flex flex-col bg-gray-100">
@@ -17,16 +86,8 @@ export const EditorPage: React.FC = () => {
       <EnhancedToolbar 
         onShowBlueprints={() => setShowBlueprints(!showBlueprints)}
         onShowMaterials={() => setShowMaterials(!showMaterials)}
-        onShowProjectManager={() => {
-          if (confirm('Ana sayfaya dönmek istediğinizden emin misiniz?')) {
-            window.location.href = '/';
-          }
-        }}
-        onNewProject={() => {
-          if (confirm('Yeni proje oluşturulsun mu?')) {
-            window.location.reload();
-          }
-        }}
+        onShowProjectManager={handleProjectManagerClick} // ✅ DÜZELTİLDİ
+        onNewProject={handleNewProject} // ✅ DÜZELTİLDİ
       />
       
       {/* Ana İçerik */}

@@ -3,8 +3,8 @@
 // ============================================
 import { useFrame, useThree } from '@react-three/fiber';
 import { useState } from 'react';
-import { useDrawingStore, type Point3D } from './InteractiveScene3D';
-import * as THREE from 'three'; // THREE'yi import et
+import { useDrawingStore, type Point3D } from '../store/useDrawingStore'; // ✅ DÜZELTİLDİ
+import * as THREE from 'three';
 
 export const ComponentPlacer: React.FC = () => {
   const { mode, addComponent } = useDrawingStore();
@@ -51,9 +51,8 @@ export const ComponentPlacer: React.FC = () => {
       type: mode,
       position: previewPos,
       rotation: [0, 0, 0],
-      componentId: Math.floor(Math.random() * 100),
-      name: componentNames[mode] || 'Cihaz',
-      properties: {}
+      componentId: 0,
+      name: componentNames[mode] || mode
     });
   };
   
@@ -61,11 +60,11 @@ export const ComponentPlacer: React.FC = () => {
   
   return (
     <mesh 
-      position={[previewPos.x, previewPos.y, previewPos.z]}
+      position={[previewPos.x, previewPos.y, previewPos.z]} 
       onClick={handleClick}
     >
-      {mode === 'meter' && <boxGeometry args={[0.6, 0.4, 0.3]} />}
       {mode === 'valve' && <cylinderGeometry args={[0.2, 0.2, 0.4, 8]} />}
+      {mode === 'meter' && <boxGeometry args={[0.6, 0.4, 0.3]} />}
       {mode === 'boiler' && <boxGeometry args={[1.2, 1.5, 0.6]} />}
       {mode === 'elbow' && <torusGeometry args={[0.3, 0.08, 8, 16, Math.PI / 2]} />}
       <meshBasicMaterial color="#3b82f6" transparent opacity={0.5} wireframe />

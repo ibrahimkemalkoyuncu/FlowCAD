@@ -1,27 +1,23 @@
 // ============================================
-// 2. src/components/BlueprintUploader.tsx - Upload Modal
+// BlueprintUploader.tsx - Blueprint Yükleme
 // ============================================
 import React, { useState, useRef } from 'react';
 import { useBlueprintStore, type Blueprint } from '../store/useBlueprintStore';
 import { blueprintApi } from '../services/blueprintApi';
+import toast from 'react-hot-toast'; // ✅ YENİ EKLEME
+import { config } from '../config/env'; // ✅ YENİ EKLEME
 
 interface BlueprintUploaderProps {
   onClose: () => void;
 }
 
 export const BlueprintUploader: React.FC<BlueprintUploaderProps> = ({ onClose }) => {
-  const [dragActive, setDragActive] = useState(false);
-  const [uploading, setUploading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { addBlueprint } = useBlueprintStore();
-  
-  const supportedFormats = {
-    image: ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/bmp'],
-    cad: ['application/dxf', 'application/dwg', '.dxf', '.dwg']
-  };
-  
+
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -31,92 +27,52 @@ export const BlueprintUploader: React.FC<BlueprintUploaderProps> = ({ onClose })
       setDragActive(false);
     }
   };
-  
+
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
     
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      handleFile(e.dataTransfer.files[0]);
+      handleFileSelect(e.dataTransfer.files[0]);
     }
   };
-  
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+
+  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      handleFile(e.target.files[0]);
+      handleFileSelect(e.target.files[0]);
     }
   };
-  
-  const handleFile = (file: File) => {
-    const fileName = file.name.toLowerCase();
-    const fileType = file.type.toLowerCase();
+
+  const handleFileSelect = (file: File) => {
+    const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/bmp'];
+    const validExtensions = ['.dxf', '.dwg'];
+    const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase();
     
-    // Check if file is supported
-    const isImage = supportedFormats.image.some(type => 
-      fileType.includes(type.replace('image/', ''))
-    );
-    const isCAD = fileName.endsWith('.dxf') || fileName.endsWith('.dwg');
-    
-    if (!isImage && !isCAD) {
-      alert('Desteklenmeyen dosya formatı! PNG, JPG, DXF veya DWG yükleyebilirsiniz.');
+    if (!validTypes.includes(file.type) && !validExtensions.includes(fileExtension)) {
+      toast.error('Desteklenmeyen dosya formatı! PNG, JPG, GIF, BMP, DXF veya DWG seçin.'); // ✅ DÜZELTİLDİ
       return;
     }
-    
+
     setSelectedFile(file);
-    
-    // Create preview for images
-    if (isImage) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setPreviewUrl(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
-    } else {
-      setPreviewUrl(null);
-    }
   };
-  
+
   const handleUpload = async () => {
     if (!selectedFile) return;
-    
+
     setUploading(true);
-    
+    const loadingToast = toast.loading('Dosya yükleniyor...'); // ✅ YENİ
+
     try {
-      // Dosyayı backend'e yükle
       const result = await blueprintApi.upload(selectedFile);
       
-      // Blueprint objesini oluştur
-      const img = new Image();
-      img.onload = () => {
-        const blueprint: Blueprint = {
-          id: `blueprint_${Date.now()}`,
-          name: selectedFile.name,
-          type: result.type === 'dxf' ? 'dxf' : 'image',
-          url: `https://localhost:7121${result.url}`, // Backend URL
-          width: img.width / 100,
-          height: img.height / 100,
-          scale: 1,
-          position: { x: 0, y: 0, z: 0 },
-          rotation: 0,
-          opacity: 0.7,
-          visible: true,
-          locked: false
-        };
-        
-        addBlueprint(blueprint);
-        onClose();
-      };
-      
-      if (result.type !== 'dxf') {
-        img.src = `https://localhost:7121${result.url}`;
-      } else {
-        // DXF için direkt ekle
+      if (result.type === 'dxf' || result.type === 'dwg') {
+        // DXF/DWG dosyası
         const blueprint: Blueprint = {
           id: `blueprint_${Date.now()}`,
           name: selectedFile.name,
           type: 'dxf',
-          url: `https://localhost:7121${result.url}`,
+          url: `${config.apiUrl}${result.url}`, // ✅ DÜZELTİLDİ
           width: 20,
           height: 20,
           scale: 1,
@@ -127,18 +83,48 @@ export const BlueprintUploader: React.FC<BlueprintUploaderProps> = ({ onClose })
           locked: false
         };
         addBlueprint(blueprint);
+        toast.success('DXF dosyası başarıyla yüklendi!', { id: loadingToast }); // ✅ DÜZELTİLDİ
         onClose();
+      } else {
+        // Resim dosyası
+        const img = new Image();
+        img.onload = () => {
+          const blueprint: Blueprint = {
+            id: `blueprint_${Date.now()}`,
+            name: selectedFile.name,
+            type: result.type === 'dxf' ? 'dxf' : 'image',
+            url: `${config.apiUrl}${result.url}`, // ✅ DÜZELTİLDİ
+            width: img.width / 100,
+            height: img.height / 100,
+            scale: 1,
+            position: { x: 0, y: 0, z: 0 },
+            rotation: 0,
+            opacity: 0.7,
+            visible: true,
+            locked: false
+          };
+          
+          addBlueprint(blueprint);
+          toast.success('Resim başarıyla yüklendi!', { id: loadingToast }); // ✅ DÜZELTİLDİ
+          onClose();
+        };
+        
+        img.onerror = () => {
+          toast.error('Resim yüklenirken hata oluştu!', { id: loadingToast }); // ✅ YENİ
+        };
+        
+        if (result.type !== 'dxf') {
+          img.src = `${config.apiUrl}${result.url}`; // ✅ DÜZELTİLDİ
+        }
       }
       
     } catch (error) {
       console.error('Upload error:', error);
-      alert('Dosya yüklenirken hata oluştu!');
+      toast.error('Dosya yüklenirken hata oluştu!', { id: loadingToast }); // ✅ DÜZELTİLDİ
     } finally {
       setUploading(false);
     }
   };
-  
-  // handleDXFUpload fonksiyonu kaldırıldı - kullanılmıyor
   
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
@@ -173,25 +159,34 @@ export const BlueprintUploader: React.FC<BlueprintUploaderProps> = ({ onClose })
             onDragOver={handleDrag}
             onDrop={handleDrop}
           >
-            {previewUrl ? (
-              <div className="space-y-4">
-                <img 
-                  src={previewUrl} 
-                  alt="Preview" 
-                  className="max-h-64 mx-auto rounded-lg shadow-md"
-                />
-                <p className="text-sm text-gray-600">{selectedFile?.name}</p>
-              </div>
+            {selectedFile ? (
+              <>
+                <div className="text-5xl mb-3">📄</div>
+                <h3 className="text-lg font-semibold text-gray-700 mb-2">
+                  {selectedFile.name}
+                </h3>
+                <p className="text-sm text-gray-500 mb-4">
+                  {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                </p>
+                <button
+                  onClick={() => setSelectedFile(null)}
+                  className="text-red-600 hover:text-red-700 text-sm font-medium"
+                >
+                  Dosyayı Değiştir
+                </button>
+              </>
             ) : (
               <>
                 <div className="text-6xl mb-4">📋</div>
-                <p className="text-lg font-medium text-gray-700 mb-2">
-                  Dosyayı buraya sürükleyin
+                <h3 className="text-xl font-semibold text-gray-700 mb-2">
+                  Dosya sürükle-bırak
+                </h3>
+                <p className="text-gray-500 mb-4">
+                  veya
                 </p>
-                <p className="text-sm text-gray-500 mb-4">veya</p>
                 <button
                   onClick={() => fileInputRef.current?.click()}
-                  className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                  className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium"
                 >
                   Dosya Seç
                 </button>
@@ -200,7 +195,7 @@ export const BlueprintUploader: React.FC<BlueprintUploaderProps> = ({ onClose })
                   type="file"
                   className="hidden"
                   accept=".png,.jpg,.jpeg,.gif,.bmp,.dxf,.dwg"
-                  onChange={handleFileSelect}
+                  onChange={handleFileInput}
                 />
               </>
             )}
@@ -217,25 +212,13 @@ export const BlueprintUploader: React.FC<BlueprintUploaderProps> = ({ onClose })
               <div>
                 <p className="text-blue-700 font-medium mb-1">📐 CAD Dosyaları:</p>
                 <p className="text-blue-600">DXF (AutoCAD)</p>
-                <p className="text-xs text-blue-500 mt-1">DWG desteği yakında...</p>
               </div>
             </div>
-          </div>
-          
-          {/* Tips */}
-          <div className="mt-4 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-            <h4 className="font-medium text-yellow-900 mb-2">💡 İpuçları:</h4>
-            <ul className="text-sm text-yellow-700 space-y-1">
-              <li>• Yüksek çözünürlüklü görseller daha iyi sonuç verir</li>
-              <li>• DXF dosyaları otomatik olarak ölçeklendirilir</li>
-              <li>• Yüklenen klavuzun üzerinde çizim yapabilirsiniz</li>
-              <li>• Birden fazla klavuz ekleyebilirsiniz</li>
-            </ul>
           </div>
         </div>
         
         {/* Footer */}
-        <div className="bg-gray-50 px-6 py-4 rounded-b-xl flex justify-end gap-3">
+        <div className="bg-gray-50 px-6 py-4 rounded-b-xl border-t flex justify-between">
           <button
             onClick={onClose}
             className="px-5 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors"
@@ -246,14 +229,21 @@ export const BlueprintUploader: React.FC<BlueprintUploaderProps> = ({ onClose })
             onClick={handleUpload}
             disabled={!selectedFile || uploading}
             className={`
-              px-5 py-2 rounded-lg transition-colors
+              px-6 py-2 rounded-lg font-medium transition-colors
               ${selectedFile && !uploading
                 ? 'bg-blue-500 text-white hover:bg-blue-600'
                 : 'bg-gray-300 text-gray-500 cursor-not-allowed'
               }
             `}
           >
-            {uploading ? 'Yükleniyor...' : 'Klavuzu Ekle'}
+            {uploading ? (
+              <span className="flex items-center gap-2">
+                <span className="animate-spin">⏳</span>
+                Yükleniyor...
+              </span>
+            ) : (
+              'Yükle'
+            )}
           </button>
         </div>
       </div>
