@@ -18,3 +18,12 @@ node_modules/
 *.mdf
 *.ldf
 App_Data/
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.production.local
+
+# Keep example file
+!.env.example

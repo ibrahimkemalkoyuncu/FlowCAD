@@ -1,10 +1,7 @@
 import axios from 'axios';
-import type { Component } from 'react';
-import type { Material } from 'three';
-import type { Project } from '../types'; // ve src/types/index.ts içinde export { Project } from './Project'
+import type { Project, Component, Material } from '../types';
 
-
-const API_BASE_URL = 'https://localhost:7121/api';
+const API_BASE_URL = `${import.meta.env.VITE_API_URL || 'https://localhost:7121'}/api`;
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -13,7 +10,7 @@ const api = axios.create({
   },
 });
 
-// Add JWT token to requests
+// JWT token interceptor
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {
@@ -21,6 +18,19 @@ api.interceptors.request.use((config) => {
   }
   return config;
 });
+
+// Error interceptor
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    console.error('API Error:', error);
+    if (error.response?.status === 401) {
+      localStorage.removeItem('token');
+      // window.location.href = '/login'; // İsterseniz ekleyin
+    }
+    return Promise.reject(error);
+  }
+);
 
 // Projects API
 export const projectsApi = {
@@ -35,13 +45,13 @@ export const projectsApi = {
     api.get<any>(`/projects/${id}/material-list`),
 };
 
-// Components API
+// Components API - ✅ Artık doğru Component type'ı kullanılıyor
 export const componentsApi = {
   getAll: () => api.get<Component[]>('/components'),
   getByType: (type: string) => api.get<Component[]>(`/components/type/${type}`),
 };
 
-// Materials API
+// Materials API - ✅ Artık doğru Material type'ı kullanılıyor
 export const materialsApi = {
   getAll: () => api.get<Material[]>('/materials'),
   getByType: (type: string) => api.get<Material[]>(`/materials/type/${type}`),
