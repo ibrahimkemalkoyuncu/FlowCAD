@@ -1,7 +1,10 @@
 import axios from 'axios';
 import type { Project, Component, Material } from '../types';
+import toast from 'react-hot-toast';
+
 
 const API_BASE_URL = `${import.meta.env.VITE_API_URL || 'https://localhost:7121'}/api`;
+
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -23,11 +26,33 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    console.error('API Error:', error);
-    if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      // window.location.href = '/login'; // İsterseniz ekleyin
+    if (error.response) {
+      // Sunucu hatası
+      switch (error.response.status) {
+        case 401:
+          toast.error('Oturum süreniz doldu. Lütfen tekrar giriş yapın.');
+          localStorage.removeItem('token');
+          window.location.href = '/login';
+          break;
+        case 403:
+          toast.error('Bu işlem için yetkiniz yok.');
+          break;
+        case 404:
+          toast.error('İstenen kaynak bulunamadı.');
+          break;
+        case 500:
+          toast.error('Sunucu hatası. Lütfen daha sonra tekrar deneyin.');
+          break;
+        default:
+          toast.error(error.response.data?.message || 'Bir hata oluştu.');
+      }
+    } else if (error.request) {
+      // Network hatası
+      toast.error('Sunucuya bağlanılamıyor. İnternet bağlantınızı kontrol edin.');
+    } else {
+      toast.error('Beklenmeyen bir hata oluştu.');
     }
+    
     return Promise.reject(error);
   }
 );

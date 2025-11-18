@@ -79,13 +79,21 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-// Static files middleware
-app.UseStaticFiles(); // wwwroot klasörü için
 
+// Static files middleware
+app.UseStaticFiles(); // Ýlk sýrada  wwwroot klasörü için
+
+// HTTPS Redirection
 app.UseHttpsRedirection();
+
+// CORS
 app.UseCors("AllowReact");
+
+// Authentication & Authorization
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Controllers
 app.MapControllers();
 
 app.Run();

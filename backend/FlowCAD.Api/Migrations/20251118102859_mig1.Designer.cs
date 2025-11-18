@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FlowCAD.Api.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251117103641_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20251118102859_mig1")]
+    partial class mig1
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
