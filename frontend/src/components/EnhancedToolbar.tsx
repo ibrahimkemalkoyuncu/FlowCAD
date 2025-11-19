@@ -1,8 +1,7 @@
 // ============================================
-// EnhancedToolbar.tsx - Gelişmiş Toolbar Bileşeni
-// Tam ve Çalışır Halde
+// EnhancedToolbar.tsx - SNAP SİSTEMİ İLE GELİŞTİRİLMİŞ
 // ============================================
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useDrawingStore } from '../store/useDrawingStore';
 
 interface EnhancedToolbarProps {
@@ -23,8 +22,9 @@ export const EnhancedToolbar: React.FC<EnhancedToolbarProps> = ({
   const { 
     mode, 
     setMode, 
-    snapToGrid, 
-    toggleSnapToGrid,
+    snapSettings,
+    toggleSnap,
+    updateSnapSettings,
     currentDiameter,
     setCurrentDiameter,
     undo,
@@ -34,6 +34,8 @@ export const EnhancedToolbar: React.FC<EnhancedToolbarProps> = ({
     components,
     clearTempPoints
   } = useDrawingStore();
+  
+  const [showSnapPanel, setShowSnapPanel] = useState(false);
   
   // Çizim araçları
   const tools = [
@@ -51,7 +53,7 @@ export const EnhancedToolbar: React.FC<EnhancedToolbarProps> = ({
   // Klavye kısayolları
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
-      // Ctrl/Cmd tuşu ile kombinasyonlar
+      // Ctrl/Cmd tuş kombinasyonları
       if (e.ctrlKey || e.metaKey) {
         if (e.key === 'z') {
           e.preventDefault();
@@ -77,22 +79,35 @@ export const EnhancedToolbar: React.FC<EnhancedToolbarProps> = ({
           clearTempPoints();
         }
         
-        // Grid snap toggle
+        // 🎯 SNAP KISAYOLLARI
+        if (e.key === 's' || e.key === 'S') {
+          setShowSnapPanel(!showSnapPanel);
+        }
         if (e.key === 'g' || e.key === 'G') {
-          toggleSnapToGrid();
+          toggleSnap('snapToGrid');
+        }
+        if (e.key === 'e' || e.key === 'E') {
+          toggleSnap('snapToEndpoints');
+        }
+        if (e.key === 'q' || e.key === 'Q') {
+          toggleSnap('snapToMidpoints');
+        }
+        if (e.key === 'i' || e.key === 'I') {
+          toggleSnap('snapToIntersections');
         }
         
         // Escape - iptal
         if (e.key === 'Escape') {
           setMode('select');
           clearTempPoints();
+          setShowSnapPanel(false);
         }
       }
     };
     
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [undo, redo, setMode, toggleSnapToGrid, clearTempPoints, tools, onShowProjectManager, onNewProject]);
+  }, [undo, redo, setMode, toggleSnap, clearTempPoints, tools, showSnapPanel]);
   
   // Tümünü temizle onayı
   const handleClearAll = () => {
@@ -167,7 +182,7 @@ export const EnhancedToolbar: React.FC<EnhancedToolbarProps> = ({
           ))}
         </div>
         
-        {/* Çap seçici (sadece boru modunda) */}
+        {/* Çap seçici */}
         {mode === 'pipe' && (
           <div className="flex items-center gap-2">
             <span className="text-sm text-gray-600 font-medium">Çap:</span>
@@ -207,6 +222,22 @@ export const EnhancedToolbar: React.FC<EnhancedToolbarProps> = ({
             <span className="ml-2 text-sm">Klavuz</span>
           </button>
           
+          {/* 🎯 SNAP PANEL TOGGLE */}
+          <button
+            onClick={() => setShowSnapPanel(!showSnapPanel)}
+            className={`
+              px-4 py-2 rounded transition-colors font-medium
+              ${showSnapPanel
+                ? 'bg-orange-500 text-white shadow-md'
+                : 'bg-orange-100 text-orange-700 hover:bg-orange-200'
+              }
+            `}
+            title="Snap Ayarları (S)"
+          >
+            <span className="text-lg">🧲</span>
+            <span className="ml-2 text-sm">Snap</span>
+          </button>
+          
           {/* Undo/Redo */}
           <button
             onClick={undo}
@@ -221,21 +252,6 @@ export const EnhancedToolbar: React.FC<EnhancedToolbarProps> = ({
             title="İleri Al (Ctrl+Y)"
           >
             ↷ İleri
-          </button>
-          
-          {/* Grid Snap */}
-          <button
-            onClick={toggleSnapToGrid}
-            className={`
-              px-3 py-2 rounded transition-colors font-medium
-              ${snapToGrid 
-                ? 'bg-green-100 text-green-700 hover:bg-green-200'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }
-            `}
-            title="Grid Snap (G)"
-          >
-            🔲 Grid
           </button>
           
           {/* Temizle */}
@@ -257,6 +273,156 @@ export const EnhancedToolbar: React.FC<EnhancedToolbarProps> = ({
           </button>
         </div>
       </div>
+      
+      {/* 🎯 SNAP PANEL */}
+      {showSnapPanel && (
+        <div className="bg-gradient-to-r from-orange-50 to-yellow-50 border-t border-b px-4 py-3">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-bold text-gray-800 text-sm">🧲 Snap Ayarları</h3>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={snapSettings.enabled}
+                onChange={() => toggleSnap('enabled')}
+                className="w-4 h-4"
+              />
+              <span className="text-sm font-medium">Master Snap</span>
+            </label>
+          </div>
+
+          <div className="grid grid-cols-6 gap-2 mb-3">
+            {/* Endpoint Snap */}
+            <button
+              onClick={() => toggleSnap('snapToEndpoints')}
+              className={`
+                flex flex-col items-center gap-1 px-3 py-2 rounded transition-all text-xs
+                ${snapSettings.snapToEndpoints
+                  ? 'bg-blue-500 text-white shadow-md'
+                  : 'bg-white border border-gray-300 text-gray-600'
+                }
+              `}
+              title="Uç Nokta (E)"
+            >
+              <span className="text-lg">□</span>
+              <span className="font-medium">Endpoint</span>
+            </button>
+
+            {/* Midpoint Snap */}
+            <button
+              onClick={() => toggleSnap('snapToMidpoints')}
+              className={`
+                flex flex-col items-center gap-1 px-3 py-2 rounded transition-all text-xs
+                ${snapSettings.snapToMidpoints
+                  ? 'bg-green-500 text-white shadow-md'
+                  : 'bg-white border border-gray-300 text-gray-600'
+                }
+              `}
+              title="Orta Nokta (Q)"
+            >
+              <span className="text-lg">△</span>
+              <span className="font-medium">Midpoint</span>
+            </button>
+
+            {/* Intersection Snap */}
+            <button
+              onClick={() => toggleSnap('snapToIntersections')}
+              className={`
+                flex flex-col items-center gap-1 px-3 py-2 rounded transition-all text-xs
+                ${snapSettings.snapToIntersections
+                  ? 'bg-orange-500 text-white shadow-md'
+                  : 'bg-white border border-gray-300 text-gray-600'
+                }
+              `}
+              title="Kesişim (I)"
+            >
+              <span className="text-lg">×</span>
+              <span className="font-medium">Intersection</span>
+            </button>
+
+            {/* Perpendicular Snap */}
+            <button
+              onClick={() => toggleSnap('snapToPerpendicular')}
+              className={`
+                flex flex-col items-center gap-1 px-3 py-2 rounded transition-all text-xs
+                ${snapSettings.snapToPerpendicular
+                  ? 'bg-purple-500 text-white shadow-md'
+                  : 'bg-white border border-gray-300 text-gray-600'
+                }
+              `}
+              title="Dik"
+            >
+              <span className="text-lg">⊥</span>
+              <span className="font-medium">Perp.</span>
+            </button>
+
+            {/* Center Snap */}
+            <button
+              onClick={() => toggleSnap('snapToCenter')}
+              className={`
+                flex flex-col items-center gap-1 px-3 py-2 rounded transition-all text-xs
+                ${snapSettings.snapToCenter
+                  ? 'bg-red-500 text-white shadow-md'
+                  : 'bg-white border border-gray-300 text-gray-600'
+                }
+              `}
+              title="Merkez"
+            >
+              <span className="text-lg">○</span>
+              <span className="font-medium">Center</span>
+            </button>
+
+            {/* Grid Snap */}
+            <button
+              onClick={() => toggleSnap('snapToGrid')}
+              className={`
+                flex flex-col items-center gap-1 px-3 py-2 rounded transition-all text-xs
+                ${snapSettings.snapToGrid
+                  ? 'bg-gray-700 text-white shadow-md'
+                  : 'bg-white border border-gray-300 text-gray-600'
+                }
+              `}
+              title="Grid (G)"
+            >
+              <span className="text-lg">⊞</span>
+              <span className="font-medium">Grid</span>
+            </button>
+          </div>
+
+          <div className="flex gap-4">
+            {/* Snap Radius */}
+            <div className="flex-1">
+              <label className="block text-xs font-medium text-gray-700 mb-1">
+                Snap Mesafesi: <span className="text-blue-600 font-bold">{snapSettings.snapRadius.toFixed(1)}m</span>
+              </label>
+              <input
+                type="range"
+                min="0.1"
+                max="2"
+                step="0.1"
+                value={snapSettings.snapRadius}
+                onChange={(e) => updateSnapSettings({ snapRadius: parseFloat(e.target.value) })}
+                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+              />
+            </div>
+
+            {/* Grid Size */}
+            <div className="flex-1">
+              <label className="block text-xs font-medium text-gray-700 mb-1">
+                Grid Boyutu: <span className="text-blue-600 font-bold">{snapSettings.gridSize.toFixed(2)}m</span>
+              </label>
+              <input
+                type="range"
+                min="0.25"
+                max="5"
+                step="0.25"
+                value={snapSettings.gridSize}
+                onChange={(e) => updateSnapSettings({ gridSize: parseFloat(e.target.value) })}
+                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+              />
+            </div>
+          </div>
+        </div>
+      )}
       
       {/* İstatistik çubuğu */}
       <div className="bg-gray-50 px-3 py-2 border-t flex gap-6 text-sm">
@@ -284,8 +450,8 @@ export const EnhancedToolbar: React.FC<EnhancedToolbarProps> = ({
         </div>
         
         <div className="text-gray-600">
-          Grid Snap: <span className={`font-semibold ${snapToGrid ? 'text-green-600' : 'text-gray-400'}`}>
-            {snapToGrid ? 'Açık ✓' : 'Kapalı'}
+          Snap: <span className={`font-semibold ${snapSettings.enabled ? 'text-green-600' : 'text-gray-400'}`}>
+            {snapSettings.enabled ? 'AÇIK ✓' : 'KAPALI'}
           </span>
         </div>
         

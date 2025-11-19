@@ -1,27 +1,77 @@
 // ============================================
-// src/components/InteractiveScene3D.tsx - İyileştirilmiş Versiyon
+// src/components/InteractiveScene3D.tsx - SNAP SİSTEMİ İLE GELİŞTİRİLMİŞ
 // ============================================
 import React from 'react';
-import { Grid, OrbitControls } from '@react-three/drei';
+import { Grid, OrbitControls, Html } from '@react-three/drei';
 import { useThree } from '@react-three/fiber';
 import { useDrawingStore, type Point3D, type PipeSegment, type ComponentInstance } from '../store/useDrawingStore';
 import { BlueprintRenderer } from './BlueprintRenderer';
 import { ComponentPlacer } from './ComponentPlacer';
 import * as THREE from 'three';
 import toast from 'react-hot-toast';
+import { findSnapPoint, getSnapColor, getSnapIcon } from '../utils/snapUtils';
 
-// ✅ CLICKABLE GROUND PLANE - İYİLEŞTİRİLMİŞ
+// ✅ SNAP VISUALIZER - Snap noktalarını görselleştir
+const SnapVisualizer: React.FC<{ snapInfo: any }> = ({ snapInfo }) => {
+  if (!snapInfo) return null;
+
+  const color = getSnapColor(snapInfo.type);
+  const icon = getSnapIcon(snapInfo.type);
+
+  return (
+    <group position={[snapInfo.point.x, snapInfo.point.y + 0.1, snapInfo.point.z]}>
+      {/* 3D Marker - Parlayan küre */}
+      <mesh>
+        <sphereGeometry args={[0.15, 16, 16]} />
+        <meshBasicMaterial color={color} transparent opacity={0.8} />
+      </mesh>
+      
+      {/* Ring effect - Halka animasyonu */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[0.2, 0.35, 32]} />
+        <meshBasicMaterial color={color} transparent opacity={0.6} />
+      </mesh>
+
+      {/* İç halka */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[0.1, 0.15, 32]} />
+        <meshBasicMaterial color={color} transparent opacity={0.4} />
+      </mesh>
+
+      {/* Label - Bilgi etiketi */}
+      <Html center distanceFactor={10}>
+        <div 
+          className="bg-white px-3 py-1.5 rounded-lg shadow-lg border-2 text-xs whitespace-nowrap pointer-events-none"
+          style={{ borderColor: color }}
+        >
+          <span style={{ color }} className="font-bold text-lg mr-2">{icon}</span>
+          <span className="font-semibold text-gray-800">{snapInfo.reference}</span>
+        </div>
+      </Html>
+    </group>
+  );
+};
+
+// ✅ CLICKABLE GROUND PLANE - SNAP DESTEKLİ
 const ClickableGroundPlane: React.FC = () => {
-  const { mode, addTempPoint, completePipe, snapToGrid, gridSize, tempPoints } = useDrawingStore();
+  const { 
+    mode, 
+    addTempPoint, 
+    completePipe, 
+    snapSettings,
+    pipes,
+    components,
+    tempPoints 
+  } = useDrawingStore();
+  
   const { camera, size } = useThree();
+  const [currentSnapInfo, setCurrentSnapInfo] = React.useState<any>(null);
 
   const handleClick = (event: any) => {
     event.stopPropagation();
     
-    // Sadece pipe modunda çalış
     if (mode !== 'pipe') return;
 
-    // Mouse pozisyonunu normalize et
     const rect = event.target.getBoundingClientRect?.() || { left: 0, top: 0 };
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
@@ -31,34 +81,40 @@ const ClickableGroundPlane: React.FC = () => {
       -(y / size.height) * 2 + 1
     );
 
-    // Raycaster ile kesişim bul
     const raycaster = new THREE.Raycaster();
     raycaster.setFromCamera(mouse, camera);
 
-    // Ground plane oluştur (Y=0 seviyesinde)
     const groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
     const intersectPoint = new THREE.Vector3();
     const intersection = raycaster.ray.intersectPlane(groundPlane, intersectPoint);
 
     if (intersection) {
-      // Grid snap uygula
-      let finalX = intersection.x;
-      let finalZ = intersection.z;
-      
-      if (snapToGrid) {
-        finalX = Math.round(intersection.x / gridSize) * gridSize;
-        finalZ = Math.round(intersection.z / gridSize) * gridSize;
-      }
-
-      const point: Point3D = {
-        x: finalX,
-        y: 0, // ✅ Zemin seviyesinde sabit
-        z: finalZ
+      const mousePos: Point3D = {
+        x: intersection.x,
+        y: 0,
+        z: intersection.z
       };
 
-      console.log('Nokta eklendi:', point); // ✅ Debug için
+      // 🎯 SNAP SİSTEMİNİ UYGULA
+      const { snappedPoint, snapInfo } = findSnapPoint(
+        mousePos,
+        pipes,
+        components,
+        snapSettings
+      );
 
-      addTempPoint(point);
+      console.log('📍 Snap Info:', snapInfo);
+      console.log('📌 Snapped Point:', snappedPoint);
+
+      addTempPoint(snappedPoint);
+      
+      // Snap bilgisini göster
+      if (snapInfo && snapInfo.type !== 'grid') {
+        toast.success(`🧲 ${snapInfo.type.toUpperCase()}: ${snapInfo.reference}`, {
+          duration: 2000,
+          icon: getSnapIcon(snapInfo.type)
+        });
+      }
       
       // 2 nokta varsa boruyu tamamla
       const currentTempPoints = useDrawingStore.getState().tempPoints;
@@ -67,36 +123,79 @@ const ClickableGroundPlane: React.FC = () => {
         completePipe();
         const lastPipe = useDrawingStore.getState().pipes[useDrawingStore.getState().pipes.length - 1];
         if (lastPipe) {
-          toast.success(`Boru eklendi! Uzunluk: ${lastPipe.length?.toFixed(2)}m`);
+          toast.success(`✅ Boru eklendi! Uzunluk: ${lastPipe.length?.toFixed(2)}m`);
         }
       } else {
-        toast('İlk nokta seçildi. İkinci noktayı seçin.', { 
-          icon: '📍',
+        toast('📍 İlk nokta seçildi. İkinci noktayı seçin.', { 
+          icon: '🎯',
           duration: 2000 
         });
       }
     }
   };
 
+  // Mouse hareket takibi - Snap önizlemesi
+  React.useEffect(() => {
+    if (mode !== 'pipe') {
+      setCurrentSnapInfo(null);
+      return;
+    }
+
+    const handleMouseMove = (event: MouseEvent) => {
+      const mouse = new THREE.Vector2(
+        (event.clientX / size.width) * 2 - 1,
+        -(event.clientY / size.height) * 2 + 1
+      );
+
+      const raycaster = new THREE.Raycaster();
+      raycaster.setFromCamera(mouse, camera);
+
+      const groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+      const intersectPoint = new THREE.Vector3();
+      const intersection = raycaster.ray.intersectPlane(groundPlane, intersectPoint);
+
+      if (intersection) {
+        const mousePos: Point3D = {
+          x: intersection.x,
+          y: 0,
+          z: intersection.z
+        };
+
+        const { snapInfo } = findSnapPoint(mousePos, pipes, components, snapSettings);
+        setCurrentSnapInfo(snapInfo);
+      }
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, [mode, pipes, components, snapSettings, camera, size]);
+
   return (
-    <mesh 
-      rotation={[-Math.PI / 2, 0, 0]} 
-      position={[0, 0, 0]} // ✅ Y=0 tam zemin seviyesi
-      onClick={handleClick}
-      receiveShadow
-    >
-      <planeGeometry args={[100, 100]} />
-      <meshStandardMaterial 
-        color="#f0f0f0" 
-        transparent 
-        opacity={mode === 'pipe' ? 0.3 : 0.5} // ✅ Pipe modunda daha saydam
-        side={THREE.DoubleSide}
-      />
-    </mesh>
+    <>
+      <mesh 
+        rotation={[-Math.PI / 2, 0, 0]} 
+        position={[0, 0, 0]}
+        onClick={handleClick}
+        receiveShadow
+      >
+        <planeGeometry args={[100, 100]} />
+        <meshStandardMaterial 
+          color="#f0f0f0" 
+          transparent 
+          opacity={mode === 'pipe' ? 0.3 : 0.5}
+          side={THREE.DoubleSide}
+        />
+      </mesh>
+      
+      {/* Snap görselleştirmesi */}
+      {currentSnapInfo && mode === 'pipe' && (
+        <SnapVisualizer snapInfo={currentSnapInfo} />
+      )}
+    </>
   );
 };
 
-// ✅ GROUND VISUAL (Sadece görsel, tıklanamaz)
+// ✅ GROUND VISUAL
 const GroundVisual: React.FC = () => {
   return (
     <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]} receiveShadow>
@@ -110,9 +209,9 @@ const GroundVisual: React.FC = () => {
   );
 };
 
-// ✅ PIPE RENDERER - İYİLEŞTİRİLMİŞ
+// ✅ PIPE RENDERER - Snap noktalarını göster
 const PipeRenderer: React.FC = () => {
-  const { pipes, selectedId, selectObject } = useDrawingStore();
+  const { pipes, selectedId, selectObject, snapSettings } = useDrawingStore();
   
   return (
     <>
@@ -130,7 +229,7 @@ const PipeRenderer: React.FC = () => {
               onClick={(e) => {
                 e.stopPropagation();
                 selectObject(pipe.id);
-                toast(`Boru seçildi: ${pipe.length?.toFixed(2)}m`, { icon: '🔧' });
+                toast(`🔧 Boru seçildi: ${pipe.length?.toFixed(2)}m`, { icon: '🔧' });
               }}
               onPointerOver={(e) => {
                 e.stopPropagation();
@@ -148,17 +247,29 @@ const PipeRenderer: React.FC = () => {
               />
             </mesh>
             
-            {/* Başlangıç noktası marker */}
-            <mesh position={[pipe.start.x, pipe.start.y, pipe.start.z]}>
-              <sphereGeometry args={[0.08, 8, 8]} />
-              <meshBasicMaterial color="#10b981" />
-            </mesh>
+            {/* Başlangıç noktası - ENDPOINT SNAP */}
+            {snapSettings.snapToEndpoints && (
+              <mesh position={[pipe.start.x, pipe.start.y + 0.05, pipe.start.z]}>
+                <sphereGeometry args={[0.08, 12, 12]} />
+                <meshBasicMaterial color="#10b981" opacity={0.7} transparent />
+              </mesh>
+            )}
             
-            {/* Bitiş noktası marker */}
-            <mesh position={[pipe.end.x, pipe.end.y, pipe.end.z]}>
-              <sphereGeometry args={[0.08, 8, 8]} />
-              <meshBasicMaterial color="#ef4444" />
-            </mesh>
+            {/* Bitiş noktası - ENDPOINT SNAP */}
+            {snapSettings.snapToEndpoints && (
+              <mesh position={[pipe.end.x, pipe.end.y + 0.05, pipe.end.z]}>
+                <sphereGeometry args={[0.08, 12, 12]} />
+                <meshBasicMaterial color="#ef4444" opacity={0.7} transparent />
+              </mesh>
+            )}
+
+            {/* Orta nokta - MIDPOINT SNAP */}
+            {snapSettings.snapToMidpoints && (
+              <mesh position={position}>
+                <boxGeometry args={[0.1, 0.1, 0.1]} />
+                <meshBasicMaterial color="#10b981" opacity={0.5} transparent />
+              </mesh>
+            )}
           </group>
         );
       })}
@@ -166,43 +277,52 @@ const PipeRenderer: React.FC = () => {
   );
 };
 
-// ✅ COMPONENT RENDERER - İYİLEŞTİRİLMİŞ
+// ✅ COMPONENT RENDERER
 const ComponentRenderer: React.FC = () => {
-  const { components, selectedId, selectObject } = useDrawingStore();
+  const { components, selectedId, selectObject, snapSettings } = useDrawingStore();
   
   return (
     <>
       {components.map((component) => (
-        <mesh 
-          key={component.id} 
-          position={[component.position.x, component.position.y, component.position.z]}
-          rotation={component.rotation as [number, number, number]}
-          onClick={(e) => {
-            e.stopPropagation();
-            selectObject(component.id);
-            toast(`${component.name} seçildi`, { icon: '⚙️' });
-          }}
-          onPointerOver={(e) => {
-            e.stopPropagation();
-            document.body.style.cursor = 'pointer';
-          }}
-          onPointerOut={() => {
-            document.body.style.cursor = 'default';
-          }}
-        >
-          {getComponentGeometry(component)}
-          <meshStandardMaterial 
-            color={component.id === selectedId ? '#3b82f6' : '#ef4444'} 
-            metalness={0.4}
-            roughness={0.6}
-          />
-        </mesh>
+        <group key={component.id}>
+          <mesh 
+            position={[component.position.x, component.position.y, component.position.z]}
+            rotation={component.rotation as [number, number, number]}
+            onClick={(e) => {
+              e.stopPropagation();
+              selectObject(component.id);
+              toast(`⚙️ ${component.name} seçildi`, { icon: '⚙️' });
+            }}
+            onPointerOver={(e) => {
+              e.stopPropagation();
+              document.body.style.cursor = 'pointer';
+            }}
+            onPointerOut={() => {
+              document.body.style.cursor = 'default';
+            }}
+          >
+            {getComponentGeometry(component)}
+            <meshStandardMaterial 
+              color={component.id === selectedId ? '#3b82f6' : '#ef4444'} 
+              metalness={0.4}
+              roughness={0.6}
+            />
+          </mesh>
+
+          {/* Component merkez noktası - CENTER SNAP */}
+          {snapSettings.snapToCenter && (
+            <mesh position={[component.position.x, component.position.y + 0.5, component.position.z]}>
+              <sphereGeometry args={[0.1, 12, 12]} />
+              <meshBasicMaterial color="#ef4444" opacity={0.6} transparent />
+            </mesh>
+          )}
+        </group>
       ))}
     </>
   );
 };
 
-// ✅ TEMP PIPE RENDERER - PREVIEW GÖSTER
+// ✅ TEMP PIPE RENDERER
 const TempPipeRenderer: React.FC = () => {
   const { tempPoints, mode } = useDrawingStore();
   
@@ -212,15 +332,19 @@ const TempPipeRenderer: React.FC = () => {
     <>
       {/* Geçici noktalar */}
       {tempPoints.map((point, index) => (
-        <mesh key={index} position={[point.x, point.y + 0.05, point.z]}>
-          <sphereGeometry args={[0.12, 16, 16]} />
-          <meshBasicMaterial color="#3b82f6" transparent opacity={0.8} />
-          {/* Nokta numarası */}
-          <mesh position={[0, 0.3, 0]}>
-            <sphereGeometry args={[0.05, 8, 8]} />
-            <meshBasicMaterial color="#ffffff" />
+        <group key={index}>
+          <mesh position={[point.x, point.y + 0.05, point.z]}>
+            <sphereGeometry args={[0.15, 16, 16]} />
+            <meshBasicMaterial color="#3b82f6" transparent opacity={0.9} />
           </mesh>
-        </mesh>
+          
+          {/* Nokta etiketi */}
+          <Html position={[point.x, point.y + 0.5, point.z]} center>
+            <div className="bg-blue-500 text-white px-2 py-1 rounded-full text-xs font-bold">
+              {index + 1}
+            </div>
+          </Html>
+        </group>
       ))}
       
       {/* Geçici boru önizlemesi */}
@@ -247,28 +371,19 @@ const TempPipeRenderer: React.FC = () => {
                   color="#3b82f6" 
                   transparent 
                   opacity={0.6}
-                  wireframe={false}
                 />
               </mesh>
             );
           })}
         </>
       )}
-      
-      {/* İlk nokta seçildiyse yardımcı metin */}
-      {tempPoints.length === 1 && (
-        <mesh position={[tempPoints[0].x, 1, tempPoints[0].z]}>
-          <sphereGeometry args={[0.1, 8, 8]} />
-          <meshBasicMaterial color="#fbbf24" />
-        </mesh>
-      )}
     </>
   );
 };
 
-// ✅ MOUSE FOLLOWER - Boru modunda fare takip
+// ✅ MOUSE FOLLOWER - SNAP DESTEKLİ
 const MouseFollower: React.FC = () => {
-  const { mode, tempPoints, snapToGrid, gridSize } = useDrawingStore();
+  const { mode, tempPoints, pipes, components, snapSettings } = useDrawingStore();
   const { camera, size } = useThree();
   const [mousePos, setMousePos] = React.useState<Point3D | null>(null);
 
@@ -292,21 +407,21 @@ const MouseFollower: React.FC = () => {
       const intersection = raycaster.ray.intersectPlane(groundPlane, intersectPoint);
 
       if (intersection) {
-        let finalX = intersection.x;
-        let finalZ = intersection.z;
-        
-        if (snapToGrid) {
-          finalX = Math.round(intersection.x / gridSize) * gridSize;
-          finalZ = Math.round(intersection.z / gridSize) * gridSize;
-        }
+        const rawPos: Point3D = {
+          x: intersection.x,
+          y: 0,
+          z: intersection.z
+        };
 
-        setMousePos({ x: finalX, y: 0, z: finalZ });
+        // Snap uygula
+        const { snappedPoint } = findSnapPoint(rawPos, pipes, components, snapSettings);
+        setMousePos(snappedPoint);
       }
     };
 
     window.addEventListener('mousemove', handleMouseMove);
     return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, [mode, tempPoints, snapToGrid, gridSize, camera, size]);
+  }, [mode, tempPoints, pipes, components, snapSettings, camera, size]);
 
   if (!mousePos || tempPoints.length === 0) return null;
 
@@ -324,19 +439,27 @@ const MouseFollower: React.FC = () => {
   const rotation = getRotationBetweenPoints(lastPoint, mousePos);
 
   return (
-    <mesh position={position} rotation={rotation}>
-      <cylinderGeometry args={[0.04, 0.04, length, 12]} />
-      <meshBasicMaterial 
-        color="#fbbf24" 
-        transparent 
-        opacity={0.4}
-        wireframe
-      />
-    </mesh>
+    <>
+      <mesh position={position} rotation={rotation}>
+        <cylinderGeometry args={[0.04, 0.04, length, 12]} />
+        <meshBasicMaterial 
+          color="#fbbf24" 
+          transparent 
+          opacity={0.5}
+        />
+      </mesh>
+      
+      {/* Uzunluk etiketi */}
+      <Html position={position} center>
+        <div className="bg-yellow-500 text-white px-2 py-1 rounded text-xs font-bold">
+          {length.toFixed(2)}m
+        </div>
+      </Html>
+    </>
   );
 };
 
-// SelectionHighlight bileşeni
+// ✅ SELECTION HIGHLIGHT
 const SelectionHighlight: React.FC = () => {
   const { selectedId, pipes, components } = useDrawingStore();
   
@@ -369,7 +492,8 @@ const SelectionHighlight: React.FC = () => {
   return null;
 };
 
-// Yardımcı fonksiyonlar
+// ===== YARDIMCI FONKSİYONLAR =====
+
 const getPipePosition = (pipe: PipeSegment): [number, number, number] => {
   return [
     (pipe.start.x + pipe.end.x) / 2,
@@ -394,10 +518,7 @@ const getPipeRotation = (pipe: PipeSegment): [number, number, number] => {
   const length = Math.sqrt(dx * dx + dy * dy + dz * dz);
   if (length === 0) return [0, 0, 0];
   
-  // Y ekseninde rotasyon (yatay düzlem)
   const rotationY = Math.atan2(dx, dz);
-  
-  // X ekseninde rotasyon (dikey)
   const rotationX = Math.asin(dy / length);
   
   return [rotationX, rotationY, 0];
@@ -432,7 +553,8 @@ const getComponentGeometry = (component: ComponentInstance, scale: number = 1) =
   }
 };
 
-// Ana SceneContent bileşeni
+// ===== ANA SCENE COMPONENT =====
+
 export const SceneContent: React.FC = () => {
   const { mode } = useDrawingStore();
   
