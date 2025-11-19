@@ -1,8 +1,17 @@
 // ============================================
-// EnhancedToolbar.tsx - SNAP SİSTEMİ İLE GELİŞTİRİLMİŞ
+// ENHANCED TOOLBAR - Gelişmiş Araç Çubuğu
+// Konum: frontend/src/components/EnhancedToolbar.tsx
+// SNAP sistemi toggle butonu eklendi
+// Son güncelleme: 2025-01-19 12:07:28 UTC
+// Geliştirici: @ibrahimkemalkoyuncu
 // ============================================
+
 import React, { useEffect, useState } from 'react';
 import { useDrawingStore } from '../store/useDrawingStore';
+
+// ============================================
+// INTERFACE - Component Props
+// ============================================
 
 interface EnhancedToolbarProps {
   onShowBlueprints: () => void;
@@ -10,21 +19,31 @@ interface EnhancedToolbarProps {
   onShowBuilding?: () => void;
   onShowProjectManager?: () => void;
   onNewProject?: () => void;
+  onShowSnapPanel?: () => void;  // 🎯 YENİ: Snap panel toggle
 }
+
+// ============================================
+// ENHANCED TOOLBAR COMPONENT
+// ============================================
 
 export const EnhancedToolbar: React.FC<EnhancedToolbarProps> = ({ 
   onShowBlueprints, 
   onShowMaterials,
   onShowBuilding,
   onShowProjectManager,
-  onNewProject
+  onNewProject,
+  onShowSnapPanel
 }) => {
+  
+  // ============================================
+  // STORE - Zustand State
+  // ============================================
+  
   const { 
     mode, 
     setMode, 
     snapSettings,
     toggleSnap,
-    updateSnapSettings,
     currentDiameter,
     setCurrentDiameter,
     undo,
@@ -35,25 +54,36 @@ export const EnhancedToolbar: React.FC<EnhancedToolbarProps> = ({
     clearTempPoints
   } = useDrawingStore();
   
-  const [showSnapPanel, setShowSnapPanel] = useState(false);
+  // Local state - Snap panel açık mı?
+  const [isSnapPanelOpen, setIsSnapPanelOpen] = useState(false);
   
-  // Çizim araçları
+  // ============================================
+  // TOOL DEFINITIONS - Araç Tanımları
+  // ============================================
+  
   const tools = [
-    { id: 'select', name: 'Seç', icon: '👆', shortcut: 'V' },
-    { id: 'pipe', name: 'Boru', icon: '│', shortcut: 'P' },
-    { id: 'valve', name: 'Vana', icon: '⊗', shortcut: 'A' },
-    { id: 'meter', name: 'Sayaç', icon: '⊞', shortcut: 'M' },
-    { id: 'boiler', name: 'Kombi', icon: '⊡', shortcut: 'B' },
-    { id: 'delete', name: 'Sil', icon: '🗑️', shortcut: 'D' },
+    { id: 'select', name: 'Seç', icon: '👆', shortcut: 'V', color: 'blue' },
+    { id: 'pipe', name: 'Boru', icon: '│', shortcut: 'P', color: 'blue' },
+    { id: 'valve', name: 'Vana', icon: '⊗', shortcut: 'A', color: 'blue' },
+    { id: 'meter', name: 'Sayaç', icon: '⊞', shortcut: 'M', color: 'blue' },
+    { id: 'boiler', name: 'Kombi', icon: '⊡', shortcut: 'B', color: 'blue' },
+    { id: 'delete', name: 'Sil', icon: '🗑️', shortcut: 'D', color: 'red' },
   ];
   
-  // Boru çapları
-  const diameters = ['1/2"', '3/4"', '1"', '1 1/4"'];
+  // Boru çapları listesi
+  const diameters = ['1/2"', '3/4"', '1"', '1 1/4"', '1 1/2"', '2"'];
   
-  // Klavye kısayolları
+  // ============================================
+  // KEYBOARD SHORTCUTS - Klavye Kısayolları
+  // ============================================
+  
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
-      // Ctrl/Cmd tuş kombinasyonları
+      
+      // ============================================
+      // CTRL/CMD KOMBINASYONLARI
+      // ============================================
+      
       if (e.ctrlKey || e.metaKey) {
         if (e.key === 'z') {
           e.preventDefault();
@@ -71,8 +101,14 @@ export const EnhancedToolbar: React.FC<EnhancedToolbarProps> = ({
           e.preventDefault();
           if (onNewProject) onNewProject();
         }
-      } else {
-        // Normal tuş kısayolları
+      } 
+      
+      // ============================================
+      // NORMAL KISAYOLLAR
+      // ============================================
+      
+      else {
+        // Araç kısayolları (V, P, A, M, B, D)
         const tool = tools.find(t => t.shortcut.toLowerCase() === e.key.toLowerCase());
         if (tool) {
           setMode(tool.id as any);
@@ -81,7 +117,8 @@ export const EnhancedToolbar: React.FC<EnhancedToolbarProps> = ({
         
         // 🎯 SNAP KISAYOLLARI
         if (e.key === 's' || e.key === 'S') {
-          setShowSnapPanel(!showSnapPanel);
+          setIsSnapPanelOpen(!isSnapPanelOpen);
+          if (onShowSnapPanel) onShowSnapPanel();
         }
         if (e.key === 'g' || e.key === 'G') {
           toggleSnap('snapToGrid');
@@ -96,34 +133,60 @@ export const EnhancedToolbar: React.FC<EnhancedToolbarProps> = ({
           toggleSnap('snapToIntersections');
         }
         
-        // Escape - iptal
+        // Escape - İptal
         if (e.key === 'Escape') {
           setMode('select');
           clearTempPoints();
-          setShowSnapPanel(false);
         }
       }
     };
     
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [undo, redo, setMode, toggleSnap, clearTempPoints, tools, showSnapPanel]);
+  }, [undo, redo, setMode, toggleSnap, clearTempPoints, isSnapPanelOpen, onShowSnapPanel, onShowProjectManager, onNewProject]);
   
-  // Tümünü temizle onayı
+  // ============================================
+  // EVENT HANDLERS
+  // ============================================
+  
+  /**
+   * Tümünü temizle - Onay ister
+   */
   const handleClearAll = () => {
     if (confirm('Tüm çizimleri silmek istediğinizden emin misiniz?')) {
       clearAll();
     }
   };
   
-  // Toplam boru uzunluğu
+  // Toplam boru uzunluğu hesapla
   const totalLength = pipes.reduce((sum, pipe) => sum + (pipe.length || 0), 0);
+  
+  // Aktif snap sayısı
+  const activeSnapsCount = [
+    snapSettings.snapToEndpoints,
+    snapSettings.snapToMidpoints,
+    snapSettings.snapToIntersections,
+    snapSettings.snapToCenter,
+    snapSettings.snapToGrid
+  ].filter(Boolean).length;
+  
+  // ============================================
+  // RENDER
+  // ============================================
   
   return (
     <div className="bg-white border-b shadow-sm">
-      {/* Ana toolbar */}
+      
+      {/* ============================================
+          MAIN TOOLBAR - Ana Toolbar
+          ============================================ */}
+      
       <div className="flex items-center justify-between p-3 gap-4">
-        {/* Sol: Dosya işlemleri */}
+        
+        {/* ============================================
+            SOL - Dosya İşlemleri
+            ============================================ */}
+        
         {(onNewProject || onShowProjectManager) && (
           <div className="flex gap-2">
             {onNewProject && (
@@ -158,7 +221,10 @@ export const EnhancedToolbar: React.FC<EnhancedToolbarProps> = ({
           </div>
         )}
         
-        {/* Orta: Çizim araçları */}
+        {/* ============================================
+            ORTA - Çizim Araçları
+            ============================================ */}
+        
         <div className="flex gap-1">
           {tools.map(tool => (
             <button
@@ -182,7 +248,10 @@ export const EnhancedToolbar: React.FC<EnhancedToolbarProps> = ({
           ))}
         </div>
         
-        {/* Çap seçici */}
+        {/* ============================================
+            ÇAP SEÇİCİ - Boru modunda görünür
+            ============================================ */}
+        
         {mode === 'pipe' && (
           <div className="flex items-center gap-2">
             <span className="text-sm text-gray-600 font-medium">Çap:</span>
@@ -198,9 +267,13 @@ export const EnhancedToolbar: React.FC<EnhancedToolbarProps> = ({
           </div>
         )}
         
-        {/* Sağ: Özel butonlar */}
+        {/* ============================================
+            SAĞ - Özel Butonlar
+            ============================================ */}
+        
         <div className="flex gap-2">
-          {/* Bina yönetimi */}
+          
+          {/* Bina Yönetimi */}
           {onShowBuilding && (
             <button
               onClick={onShowBuilding}
@@ -212,7 +285,7 @@ export const EnhancedToolbar: React.FC<EnhancedToolbarProps> = ({
             </button>
           )}
           
-          {/* Klavuz */}
+          {/* Klavuz Panel */}
           <button
             onClick={onShowBlueprints}
             className="px-4 py-2 bg-purple-100 text-purple-700 rounded hover:bg-purple-200 transition-colors font-medium"
@@ -222,12 +295,18 @@ export const EnhancedToolbar: React.FC<EnhancedToolbarProps> = ({
             <span className="ml-2 text-sm">Klavuz</span>
           </button>
           
-          {/* 🎯 SNAP PANEL TOGGLE */}
+          {/* ============================================
+              🎯 SNAP PANEL TOGGLE - Yeni Özellik
+              ============================================ */}
+          
           <button
-            onClick={() => setShowSnapPanel(!showSnapPanel)}
+            onClick={() => {
+              setIsSnapPanelOpen(!isSnapPanelOpen);
+              if (onShowSnapPanel) onShowSnapPanel();
+            }}
             className={`
-              px-4 py-2 rounded transition-colors font-medium
-              ${showSnapPanel
+              px-4 py-2 rounded transition-all font-medium relative
+              ${snapSettings.enabled
                 ? 'bg-orange-500 text-white shadow-md'
                 : 'bg-orange-100 text-orange-700 hover:bg-orange-200'
               }
@@ -236,6 +315,18 @@ export const EnhancedToolbar: React.FC<EnhancedToolbarProps> = ({
           >
             <span className="text-lg">🧲</span>
             <span className="ml-2 text-sm">Snap</span>
+            
+            {/* Durum badge'i */}
+            {snapSettings.enabled && (
+              <span className="ml-1 text-xs bg-white/30 px-1.5 py-0.5 rounded">
+                {activeSnapsCount}
+              </span>
+            )}
+            
+            {/* Aktif göstergesi */}
+            {snapSettings.enabled && (
+              <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-white"></span>
+            )}
           </button>
           
           {/* Undo/Redo */}
@@ -274,158 +365,13 @@ export const EnhancedToolbar: React.FC<EnhancedToolbarProps> = ({
         </div>
       </div>
       
-      {/* 🎯 SNAP PANEL */}
-      {showSnapPanel && (
-        <div className="bg-gradient-to-r from-orange-50 to-yellow-50 border-t border-b px-4 py-3">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="font-bold text-gray-800 text-sm">🧲 Snap Ayarları</h3>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={snapSettings.enabled}
-                onChange={() => toggleSnap('enabled')}
-                className="w-4 h-4"
-              />
-              <span className="text-sm font-medium">Master Snap</span>
-            </label>
-          </div>
-
-          <div className="grid grid-cols-6 gap-2 mb-3">
-            {/* Endpoint Snap */}
-            <button
-              onClick={() => toggleSnap('snapToEndpoints')}
-              className={`
-                flex flex-col items-center gap-1 px-3 py-2 rounded transition-all text-xs
-                ${snapSettings.snapToEndpoints
-                  ? 'bg-blue-500 text-white shadow-md'
-                  : 'bg-white border border-gray-300 text-gray-600'
-                }
-              `}
-              title="Uç Nokta (E)"
-            >
-              <span className="text-lg">□</span>
-              <span className="font-medium">Endpoint</span>
-            </button>
-
-            {/* Midpoint Snap */}
-            <button
-              onClick={() => toggleSnap('snapToMidpoints')}
-              className={`
-                flex flex-col items-center gap-1 px-3 py-2 rounded transition-all text-xs
-                ${snapSettings.snapToMidpoints
-                  ? 'bg-green-500 text-white shadow-md'
-                  : 'bg-white border border-gray-300 text-gray-600'
-                }
-              `}
-              title="Orta Nokta (Q)"
-            >
-              <span className="text-lg">△</span>
-              <span className="font-medium">Midpoint</span>
-            </button>
-
-            {/* Intersection Snap */}
-            <button
-              onClick={() => toggleSnap('snapToIntersections')}
-              className={`
-                flex flex-col items-center gap-1 px-3 py-2 rounded transition-all text-xs
-                ${snapSettings.snapToIntersections
-                  ? 'bg-orange-500 text-white shadow-md'
-                  : 'bg-white border border-gray-300 text-gray-600'
-                }
-              `}
-              title="Kesişim (I)"
-            >
-              <span className="text-lg">×</span>
-              <span className="font-medium">Intersection</span>
-            </button>
-
-            {/* Perpendicular Snap */}
-            <button
-              onClick={() => toggleSnap('snapToPerpendicular')}
-              className={`
-                flex flex-col items-center gap-1 px-3 py-2 rounded transition-all text-xs
-                ${snapSettings.snapToPerpendicular
-                  ? 'bg-purple-500 text-white shadow-md'
-                  : 'bg-white border border-gray-300 text-gray-600'
-                }
-              `}
-              title="Dik"
-            >
-              <span className="text-lg">⊥</span>
-              <span className="font-medium">Perp.</span>
-            </button>
-
-            {/* Center Snap */}
-            <button
-              onClick={() => toggleSnap('snapToCenter')}
-              className={`
-                flex flex-col items-center gap-1 px-3 py-2 rounded transition-all text-xs
-                ${snapSettings.snapToCenter
-                  ? 'bg-red-500 text-white shadow-md'
-                  : 'bg-white border border-gray-300 text-gray-600'
-                }
-              `}
-              title="Merkez"
-            >
-              <span className="text-lg">○</span>
-              <span className="font-medium">Center</span>
-            </button>
-
-            {/* Grid Snap */}
-            <button
-              onClick={() => toggleSnap('snapToGrid')}
-              className={`
-                flex flex-col items-center gap-1 px-3 py-2 rounded transition-all text-xs
-                ${snapSettings.snapToGrid
-                  ? 'bg-gray-700 text-white shadow-md'
-                  : 'bg-white border border-gray-300 text-gray-600'
-                }
-              `}
-              title="Grid (G)"
-            >
-              <span className="text-lg">⊞</span>
-              <span className="font-medium">Grid</span>
-            </button>
-          </div>
-
-          <div className="flex gap-4">
-            {/* Snap Radius */}
-            <div className="flex-1">
-              <label className="block text-xs font-medium text-gray-700 mb-1">
-                Snap Mesafesi: <span className="text-blue-600 font-bold">{snapSettings.snapRadius.toFixed(1)}m</span>
-              </label>
-              <input
-                type="range"
-                min="0.1"
-                max="2"
-                step="0.1"
-                value={snapSettings.snapRadius}
-                onChange={(e) => updateSnapSettings({ snapRadius: parseFloat(e.target.value) })}
-                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-              />
-            </div>
-
-            {/* Grid Size */}
-            <div className="flex-1">
-              <label className="block text-xs font-medium text-gray-700 mb-1">
-                Grid Boyutu: <span className="text-blue-600 font-bold">{snapSettings.gridSize.toFixed(2)}m</span>
-              </label>
-              <input
-                type="range"
-                min="0.25"
-                max="5"
-                step="0.25"
-                value={snapSettings.gridSize}
-                onChange={(e) => updateSnapSettings({ gridSize: parseFloat(e.target.value) })}
-                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-              />
-            </div>
-          </div>
-        </div>
-      )}
+      {/* ============================================
+          STATUS BAR - Durum Çubuğu
+          ============================================ */}
       
-      {/* İstatistik çubuğu */}
       <div className="bg-gray-50 px-3 py-2 border-t flex gap-6 text-sm">
+        
+        {/* Aktif Mod */}
         <div className="text-gray-600">
           Mod: <span className="font-semibold text-gray-900">
             {mode === 'select' && '👆 Seçim'}
@@ -437,24 +383,40 @@ export const EnhancedToolbar: React.FC<EnhancedToolbarProps> = ({
           </span>
         </div>
         
+        {/* Boru Sayısı */}
         <div className="text-gray-600">
           Borular: <span className="font-semibold text-gray-900">{pipes.length}</span>
         </div>
         
+        {/* Cihaz Sayısı */}
         <div className="text-gray-600">
           Cihazlar: <span className="font-semibold text-gray-900">{components.length}</span>
         </div>
         
+        {/* Toplam Uzunluk */}
         <div className="text-gray-600">
           Toplam Uzunluk: <span className="font-semibold text-gray-900">{totalLength.toFixed(2)}m</span>
         </div>
         
-        <div className="text-gray-600">
-          Snap: <span className={`font-semibold ${snapSettings.enabled ? 'text-green-600' : 'text-gray-400'}`}>
-            {snapSettings.enabled ? 'AÇIK ✓' : 'KAPALI'}
+        {/* 🎯 SNAP DURUM GÖSTERGESİ */}
+        <div className="text-gray-600 flex items-center gap-2">
+          <span>Snap:</span>
+          <span className={`font-semibold flex items-center gap-1 ${snapSettings.enabled ? 'text-orange-600' : 'text-gray-400'}`}>
+            {snapSettings.enabled ? (
+              <>
+                <span>🧲</span>
+                <span>AÇIK</span>
+                <span className="text-xs bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded">
+                  {activeSnapsCount} aktif
+                </span>
+              </>
+            ) : (
+              <span>KAPALI</span>
+            )}
           </span>
         </div>
         
+        {/* Seçili Çap (Boru modunda) */}
         {mode === 'pipe' && (
           <div className="text-gray-600">
             Seçili Çap: <span className="font-semibold text-blue-600">{currentDiameter}</span>
@@ -464,5 +426,9 @@ export const EnhancedToolbar: React.FC<EnhancedToolbarProps> = ({
     </div>
   );
 };
+
+// ============================================
+// EXPORT
+// ============================================
 
 export default EnhancedToolbar;

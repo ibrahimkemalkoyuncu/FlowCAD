@@ -1,35 +1,46 @@
 // ============================================
 // SNAP UTILITIES - Gelişmiş Nokta Yakalama Sistemi
-// Tüm snap fonksiyonlarını içerir
+// Konum: frontend/src/utils/snapUtils.ts
+// Tüm snap hesaplamalarını içerir
+// Son güncelleme: 2025-01-19
+// Yazar: FlowCAD Team
 // ============================================
 
 import type { Point3D, PipeSegment, ComponentInstance } from '../store/useDrawingStore';
 
 // ============================================
-// SNAP TİPLERİ VE AYARLAR
+// TYPE DEFINITIONS - Tip Tanımlamaları
 // ============================================
 
+/**
+ * Snap noktası bilgisi
+ * Her snap noktasının tipi, konumu ve mesafesi
+ */
 export interface SnapPoint {
   point: Point3D;
   type: 'endpoint' | 'midpoint' | 'intersection' | 'perpendicular' | 'center' | 'grid';
   distance: number;
-  reference?: string; // Hangi nesneye ait olduğu bilgisi
+  reference?: string; // Hangi nesneye ait (örn: "Boru pipe_123 başlangıç")
 }
 
+/**
+ * Snap ayarları
+ * Kullanıcının snap tercihlerini tutar
+ */
 export interface SnapSettings {
   enabled: boolean;              // Master snap açık/kapalı
   snapToEndpoints: boolean;      // Uç noktalara yapış
   snapToMidpoints: boolean;      // Orta noktalara yapış
   snapToIntersections: boolean;  // Kesişim noktalarına yapış
-  snapToPerpendicular: boolean;  // Dik noktalara yapış
+  snapToPerpendicular: boolean;  // Dik noktalara yapış (gelecek özellik)
   snapToCenter: boolean;         // Merkez noktalara yapış
   snapToGrid: boolean;           // Grid noktalarına yapış
-  snapRadius: number;            // Snap mesafesi (metre cinsinden)
+  snapRadius: number;            // Snap etkili olacağı mesafe (metre)
   gridSize: number;              // Grid boyutu (metre)
 }
 
 // ============================================
-// VARSAYILAN AYARLAR
+// DEFAULT SETTINGS - Varsayılan Ayarlar
 // ============================================
 
 export const defaultSnapSettings: SnapSettings = {
@@ -45,11 +56,14 @@ export const defaultSnapSettings: SnapSettings = {
 };
 
 // ============================================
-// MESAFE HESAPLAMA FONKSİYONLARI
+// DISTANCE CALCULATION - Mesafe Hesaplama
 // ============================================
 
 /**
  * İki 3D nokta arasındaki Öklid mesafesini hesaplar
+ * @param p1 - İlk nokta
+ * @param p2 - İkinci nokta
+ * @returns Mesafe (metre)
  */
 export const distance3D = (p1: Point3D, p2: Point3D): number => {
   return Math.sqrt(
@@ -60,10 +74,17 @@ export const distance3D = (p1: Point3D, p2: Point3D): number => {
 };
 
 // ============================================
-// ENDPOINT SNAP - Uç Noktalara Yapışma
-// Boru başlangıç/bitiş noktaları ve component merkezleri
+// ENDPOINT SNAP - Uç Nokta Yakalama
 // ============================================
 
+/**
+ * Boru uç noktalarına ve component merkezlerine snap noktaları bulur
+ * @param mousePos - Fare pozisyonu
+ * @param pipes - Tüm borular
+ * @param components - Tüm componentler
+ * @param snapRadius - Snap mesafesi
+ * @returns Bulunan snap noktaları dizisi
+ */
 export const findEndpointSnaps = (
   mousePos: Point3D,
   pipes: PipeSegment[],
@@ -81,7 +102,7 @@ export const findEndpointSnaps = (
         point: pipe.start,
         type: 'endpoint',
         distance: startDist,
-        reference: `Boru ${pipe.id.slice(0, 8)} başlangıç`
+        reference: `Boru ${pipe.id.slice(0, 8)}... başlangıç`
       });
     }
 
@@ -92,7 +113,7 @@ export const findEndpointSnaps = (
         point: pipe.end,
         type: 'endpoint',
         distance: endDist,
-        reference: `Boru ${pipe.id.slice(0, 8)} bitiş`
+        reference: `Boru ${pipe.id.slice(0, 8)}... bitiş`
       });
     }
   });
@@ -103,7 +124,7 @@ export const findEndpointSnaps = (
     if (dist <= snapRadius) {
       snapPoints.push({
         point: comp.position,
-        type: 'endpoint',
+        type: 'center',
         distance: dist,
         reference: `${comp.name} merkezi`
       });
@@ -114,10 +135,16 @@ export const findEndpointSnaps = (
 };
 
 // ============================================
-// MIDPOINT SNAP - Orta Noktalara Yapışma
-// Boru orta noktalarını hesaplar
+// MIDPOINT SNAP - Orta Nokta Yakalama
 // ============================================
 
+/**
+ * Boru orta noktalarına snap noktaları bulur
+ * @param mousePos - Fare pozisyonu
+ * @param pipes - Tüm borular
+ * @param snapRadius - Snap mesafesi
+ * @returns Bulunan snap noktaları dizisi
+ */
 export const findMidpointSnaps = (
   mousePos: Point3D,
   pipes: PipeSegment[],
@@ -139,7 +166,7 @@ export const findMidpointSnaps = (
         point: midpoint,
         type: 'midpoint',
         distance: dist,
-        reference: `Boru ${pipe.id.slice(0, 8)} orta nokta`
+        reference: `Boru ${pipe.id.slice(0, 8)}... orta nokta`
       });
     }
   });
@@ -148,27 +175,31 @@ export const findMidpointSnaps = (
 };
 
 // ============================================
-// INTERSECTION SNAP - Kesişim Noktalarına Yapışma
-// İki çizginin kesişim noktasını bulur (2D - XZ düzleminde)
+// INTERSECTION SNAP - Kesişim Yakalama
 // ============================================
 
 /**
- * İki çizgi segmentinin kesişim noktasını hesaplar
+ * İki çizgi segmentinin kesişim noktasını hesaplar (2D - XZ düzlemi)
  * Parametrik denklem kullanarak hesaplama yapar
+ * @param p1 - İlk çizgi başlangıç
+ * @param p2 - İlk çizgi bitiş
+ * @param p3 - İkinci çizgi başlangıç
+ * @param p4 - İkinci çizgi bitiş
+ * @returns Kesişim noktası veya null (kesişim yoksa)
  */
 const lineIntersection = (
-  p1: Point3D, // İlk çizgi başlangıç
-  p2: Point3D, // İlk çizgi bitiş
-  p3: Point3D, // İkinci çizgi başlangıç
-  p4: Point3D  // İkinci çizgi bitiş
+  p1: Point3D,
+  p2: Point3D,
+  p3: Point3D,
+  p4: Point3D
 ): Point3D | null => {
   // Denominator (payda) hesapla
   const denom = (p4.z - p3.z) * (p2.x - p1.x) - (p4.x - p3.x) * (p2.z - p1.z);
   
-  // Paralel çizgiler kontrolü
+  // Paralel çizgiler kontrolü (eğim aynıysa kesişim yok)
   if (Math.abs(denom) < 0.001) return null;
 
-  // Parametrik değerleri hesapla
+  // Parametrik değerleri hesapla (0-1 arası olmalı)
   const ua = ((p4.x - p3.x) * (p1.z - p3.z) - (p4.z - p3.z) * (p1.x - p3.x)) / denom;
   const ub = ((p2.x - p1.x) * (p1.z - p3.z) - (p2.z - p1.z) * (p1.x - p3.x)) / denom;
 
@@ -178,11 +209,18 @@ const lineIntersection = (
   // Kesişim noktasını hesapla
   return {
     x: p1.x + ua * (p2.x - p1.x),
-    y: 0,
+    y: 0, // Zemin seviyesinde
     z: p1.z + ua * (p2.z - p1.z)
   };
 };
 
+/**
+ * Tüm boru çiftleri arasındaki kesişim noktalarını bulur
+ * @param mousePos - Fare pozisyonu
+ * @param pipes - Tüm borular
+ * @param snapRadius - Snap mesafesi
+ * @returns Bulunan kesişim snap noktaları
+ */
 export const findIntersectionSnaps = (
   mousePos: Point3D,
   pipes: PipeSegment[],
@@ -218,14 +256,21 @@ export const findIntersectionSnaps = (
 };
 
 // ============================================
-// GRID SNAP - Grid Noktalarına Yapışma
-// En yakın grid noktasını bulur
+// GRID SNAP - Grid Noktası Yakalama
 // ============================================
 
+/**
+ * En yakın grid noktasını bulur
+ * Grid boyutuna göre yuvarlar
+ * @param mousePos - Fare pozisyonu
+ * @param gridSize - Grid boyutu
+ * @returns Grid snap noktası
+ */
 export const findGridSnap = (
   mousePos: Point3D,
   gridSize: number
 ): SnapPoint => {
+  // Grid noktasına yuvarla
   const gridPoint: Point3D = {
     x: Math.round(mousePos.x / gridSize) * gridSize,
     y: Math.round(mousePos.y / gridSize) * gridSize,
@@ -241,13 +286,19 @@ export const findGridSnap = (
 };
 
 // ============================================
-// ANA SNAP FONKSİYONU
-// Tüm snap türlerini kontrol eder ve en uygununu döndürür
+// MAIN SNAP FUNCTION - Ana Snap Fonksiyonu
 // ============================================
 
 /**
  * Mouse pozisyonuna göre en uygun snap noktasını bulur
- * Öncelik sırası: endpoint > midpoint > intersection > grid
+ * Tüm snap türlerini kontrol eder ve öncelik sırasına göre en iyisini döndürür
+ * Öncelik: endpoint > midpoint > intersection > grid
+ * 
+ * @param mousePos - Fare pozisyonu
+ * @param pipes - Tüm borular
+ * @param components - Tüm componentler
+ * @param settings - Snap ayarları
+ * @returns Snap uygulanmış nokta ve snap bilgisi
  */
 export const findSnapPoint = (
   mousePos: Point3D,
@@ -255,6 +306,7 @@ export const findSnapPoint = (
   components: ComponentInstance[],
   settings: SnapSettings
 ): { snappedPoint: Point3D; snapInfo: SnapPoint | null } => {
+  
   // Snap kapalıysa direkt mouse pozisyonunu döndür
   if (!settings.enabled) {
     return { snappedPoint: mousePos, snapInfo: null };
@@ -283,7 +335,7 @@ export const findSnapPoint = (
     );
   }
 
-  // Grid snap her zaman ekle (en düşük öncelik)
+  // Grid snap ekle (en düşük öncelik)
   if (settings.snapToGrid) {
     allSnapPoints.push(findGridSnap(mousePos, settings.gridSize));
   }
@@ -295,12 +347,12 @@ export const findSnapPoint = (
 
   // Öncelik sırasına göre sırala
   const priorityOrder: SnapPoint['type'][] = [
-    'endpoint',      // En yüksek öncelik
-    'midpoint',
-    'intersection',
-    'perpendicular',
-    'center',
-    'grid'          // En düşük öncelik
+    'endpoint',      // En yüksek öncelik - boru uçları
+    'center',        // Component merkezleri
+    'midpoint',      // Orta noktalar
+    'intersection',  // Kesişim noktaları
+    'perpendicular', // Dik noktalar (henüz aktif değil)
+    'grid'          // En düşük öncelik - grid
   ];
   
   allSnapPoints.sort((a, b) => {
@@ -315,7 +367,14 @@ export const findSnapPoint = (
   const bestSnap = allSnapPoints[0];
 
   // Grid dışındaki snapler için radius kontrolü
+  // Grid her zaman snap yapar ama diğerleri sadece radius içindeyse
   if (bestSnap.type !== 'grid' && bestSnap.distance > settings.snapRadius) {
+    // Radius dışında, grid snap varsa onu kullan
+    const gridSnap = allSnapPoints.find(s => s.type === 'grid');
+    if (gridSnap && settings.snapToGrid) {
+      return { snappedPoint: gridSnap.point, snapInfo: gridSnap };
+    }
+    // Grid de yoksa mouse pozisyonunu döndür
     return { snappedPoint: mousePos, snapInfo: null };
   }
 
@@ -323,12 +382,12 @@ export const findSnapPoint = (
 };
 
 // ============================================
-// GÖRSELLEŞTIRME YARDIMCILARI
-// Snap noktalarının renklerini ve ikonlarını döndürür
+// VISUALIZATION HELPERS - Görselleştirme
 // ============================================
 
 /**
  * Snap tipine göre renk döndürür
+ * UI'da snap noktalarını renkli göstermek için
  */
 export const getSnapColor = (type: SnapPoint['type']): string => {
   const colors: Record<SnapPoint['type'], string> = {
@@ -344,6 +403,7 @@ export const getSnapColor = (type: SnapPoint['type']): string => {
 
 /**
  * Snap tipine göre ikon döndürür
+ * UI'da snap tipini göstermek için
  */
 export const getSnapIcon = (type: SnapPoint['type']): string => {
   const icons: Record<SnapPoint['type'], string> = {
@@ -359,6 +419,7 @@ export const getSnapIcon = (type: SnapPoint['type']): string => {
 
 /**
  * Snap tipine göre açıklama döndürür
+ * Tooltip'ler için
  */
 export const getSnapDescription = (type: SnapPoint['type']): string => {
   const descriptions: Record<SnapPoint['type'], string> = {
@@ -370,4 +431,21 @@ export const getSnapDescription = (type: SnapPoint['type']): string => {
     grid: 'Grid Noktası'
   };
   return descriptions[type];
+};
+
+// ============================================
+// EXPORT ALL
+// ============================================
+
+export default {
+  distance3D,
+  findEndpointSnaps,
+  findMidpointSnaps,
+  findIntersectionSnaps,
+  findGridSnap,
+  findSnapPoint,
+  getSnapColor,
+  getSnapIcon,
+  getSnapDescription,
+  defaultSnapSettings
 };

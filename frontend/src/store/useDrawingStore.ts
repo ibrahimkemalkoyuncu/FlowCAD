@@ -1,88 +1,122 @@
 // ============================================
-// DRAWING STORE - SNAP SİSTEMİ İLE GELİŞTİRİLMİŞ
-// Zustand kullanarak global state yönetimi
+// DRAWING STORE - Zustand ile State Yönetimi
+// Konum: frontend/src/store/useDrawingStore.ts
+// SNAP sistemi ile geliştirilmiş versiyon
+// Son güncelleme: 2025-01-19
+// Geliştirici: @ibrahimkemalkoyuncu
 // ============================================
 
 import { create } from 'zustand';
 import { defaultSnapSettings, type SnapSettings } from '../utils/snapUtils';
 
 // ============================================
-// TİP TANIMLARI
+// TYPE DEFINITIONS - Tip Tanımlamaları
 // ============================================
 
+/**
+ * Çizim modları
+ * Kullanıcının hangi araçla çalıştığını belirtir
+ */
 export type DrawingMode = 
-  | 'select'   // Seçim modu
-  | 'pipe'     // Boru çizimi
-  | 'elbow'    // Dirsek ekleme
-  | 'valve'    // Vana ekleme
-  | 'meter'    // Sayaç ekleme
-  | 'boiler'   // Kombi ekleme
-  | 'delete';  // Silme modu
+  | 'select'   // Seçim modu - objeleri seç ve düzenle
+  | 'pipe'     // Boru çizimi - iki nokta arası boru
+  | 'elbow'    // Dirsek ekleme - 90° bağlantı
+  | 'valve'    // Vana ekleme - kapatma vanası
+  | 'meter'    // Sayaç ekleme - su sayacı
+  | 'boiler'   // Kombi ekleme - ısıtma cihazı
+  | 'delete';  // Silme modu - tıklayarak sil
 
+/**
+ * 3D uzayda bir nokta
+ * X, Y, Z koordinatları (metre cinsinden)
+ */
 export interface Point3D {
-  x: number;
-  y: number;
-  z: number;
+  x: number;  // Sağ/Sol (Right/Left)
+  y: number;  // Yukarı/Aşağı (Up/Down)
+  z: number;  // İleri/Geri (Forward/Back)
 }
 
+/**
+ * Boru segmenti
+ * İki nokta arasında çizilmiş bir boru parçası
+ */
 export interface PipeSegment {
-  id: string;
-  start: Point3D;
-  end: Point3D;
-  diameter: string;     // Örn: "1/2", "3/4"
-  material: string;
-  length?: number;      // Otomatik hesaplanır
+  id: string;           // Benzersiz kimlik
+  start: Point3D;       // Başlangıç noktası
+  end: Point3D;         // Bitiş noktası
+  diameter: string;     // Boru çapı (örn: "1/2", "3/4")
+  material: string;     // Malzeme tipi (örn: "PPR", "Bakır")
+  length?: number;      // Uzunluk (metre) - otomatik hesaplanır
 }
 
+/**
+ * Component (Cihaz) Instance
+ * Sahnede yerleştirilmiş bir cihaz
+ */
 export interface ComponentInstance {
-  id: string;
-  type: string;         // 'valve', 'meter', 'boiler', vb.
-  position: Point3D;
-  rotation: [number, number, number];
-  componentId: number;
-  name: string;
-  properties?: Record<string, any>;
+  id: string;                         // Benzersiz kimlik
+  type: string;                       // Tip ('valve', 'meter', 'boiler', vb.)
+  position: Point3D;                  // 3D pozisyon
+  rotation: [number, number, number]; // Rotasyon (X, Y, Z radyan)
+  componentId: number;                // Component veritabanı ID'si
+  name: string;                       // Görünen isim
+  properties?: Record<string, any>;   // Ek özellikler
 }
 
 // ============================================
-// STORE INTERFACE
+// STORE INTERFACE - Store Arayüzü
 // ============================================
 
 interface DrawingState {
-  // Çizim durumu
-  mode: DrawingMode;
-  pipes: PipeSegment[];
-  components: ComponentInstance[];
-  tempPoints: Point3D[];
-  selectedId: string | null;
+  // ============================================
+  // STATE - Durum Değişkenleri
+  // ============================================
   
-  // 🎯 SNAP AYARLARI
-  snapSettings: SnapSettings;
+  mode: DrawingMode;                  // Aktif çizim modu
+  pipes: PipeSegment[];               // Tüm borular
+  components: ComponentInstance[];    // Tüm componentler
+  tempPoints: Point3D[];              // Geçici noktalar (çizim sırasında)
+  selectedId: string | null;          // Seçili obje ID'si
+  
+  // 🎯 SNAP SETTINGS - Snap Ayarları
+  snapSettings: SnapSettings;         // Snap yapılandırması
   
   // Grid ve çap ayarları
-  gridSize: number;          // Eski uyumluluk için
-  currentDiameter: string;
+  gridSize: number;                   // Grid boyutu (eski uyumluluk için)
+  currentDiameter: string;            // Seçili boru çapı
   
-  // Undo/Redo
-  history: Array<{ pipes: PipeSegment[]; components: ComponentInstance[] }>;
-  historyIndex: number;
+  // Undo/Redo sistemi
+  history: Array<{                    // Geçmiş durumlar
+    pipes: PipeSegment[];
+    components: ComponentInstance[];
+  }>;
+  historyIndex: number;               // Geçmiş index'i
   
   // ============================================
-  // TEMEL İŞLEMLER
+  // COMPUTED PROPERTIES - Hesaplanan Özellikler
   // ============================================
   
+  snapToGrid: boolean;                // Grid snap durumu (geriye dönük uyumluluk)
+  
+  // ============================================
+  // ACTIONS - Eylemler
+  // ============================================
+  
+  // Mod yönetimi
   setMode: (mode: DrawingMode) => void;
+  
+  // Geçici nokta yönetimi
   addTempPoint: (point: Point3D) => void;
   clearTempPoints: () => void;
+  
+  // Boru işlemleri
   completePipe: () => void;
+  removePipe: (id: string) => void;
   
   // Component işlemleri
   addComponent: (component: ComponentInstance) => void;
   removeComponent: (id: string) => void;
   updateComponent: (id: string, updates: Partial<ComponentInstance>) => void;
-  
-  // Pipe işlemleri
-  removePipe: (id: string) => void;
   
   // Seçim işlemleri
   selectObject: (id: string | null) => void;
@@ -90,15 +124,13 @@ interface DrawingState {
   // 🎯 SNAP İŞLEMLERİ
   toggleSnap: (snapType: keyof SnapSettings) => void;
   updateSnapSettings: (settings: Partial<SnapSettings>) => void;
+  toggleSnapToGrid: () => void;  // Geriye dönük uyumluluk
   
-  // Eski snap fonksiyonu (geriye dönük uyumluluk)
-  toggleSnapToGrid: () => void;
-  snapToGrid: boolean;  // Computed property
-  
+  // Diğer ayarlar
   setGridSize: (size: number) => void;
   setCurrentDiameter: (diameter: string) => void;
   
-  // Undo/Redo işlemleri
+  // Undo/Redo
   undo: () => void;
   redo: () => void;
   clearAll: () => void;
@@ -106,12 +138,13 @@ interface DrawingState {
 }
 
 // ============================================
-// STORE OLUŞTURMA
+// STORE CREATION - Store Oluşturma
 // ============================================
 
 export const useDrawingStore = create<DrawingState>((set, get) => ({
+  
   // ============================================
-  // BAŞLANGIÇ DEĞERLERİ
+  // INITIAL STATE - Başlangıç Durumu
   // ============================================
   
   mode: 'select',
@@ -120,7 +153,7 @@ export const useDrawingStore = create<DrawingState>((set, get) => ({
   tempPoints: [],
   selectedId: null,
   
-  // 🎯 Snap ayarları
+  // 🎯 Snap ayarları - Varsayılan değerler
   snapSettings: defaultSnapSettings,
   
   gridSize: 1,
@@ -128,44 +161,62 @@ export const useDrawingStore = create<DrawingState>((set, get) => ({
   history: [],
   historyIndex: -1,
   
-  // Computed property - geriye dönük uyumluluk
+  // Computed property - snapSettings'ten alınır
   get snapToGrid() {
     return get().snapSettings.snapToGrid;
   },
   
   // ============================================
-  // MOD İŞLEMLERİ
+  // MODE MANAGEMENT - Mod Yönetimi
   // ============================================
   
-  setMode: (mode) => set({ 
-    mode, 
-    tempPoints: [], 
-    selectedId: null 
-  }),
+  /**
+   * Çizim modunu değiştirir
+   * Mod değişirken geçici noktalar ve seçim temizlenir
+   */
+  setMode: (mode) => {
+    set({ 
+      mode, 
+      tempPoints: [], 
+      selectedId: null 
+    });
+  },
   
   // ============================================
-  // GEÇİCİ NOKTA İŞLEMLERİ
+  // TEMPORARY POINTS - Geçici Nokta Yönetimi
   // ============================================
   
+  /**
+   * Geçici nokta ekler
+   * NOT: Snap artık InteractiveScene3D'de uygulanıyor
+   * Buraya gelen nokta zaten snap uygulanmış halde
+   */
   addTempPoint: (point) => {
-    const { tempPoints, snapSettings } = get();
-    
-    // SNAP UYGULAMASI KALDIRILDI
-    // Snap artık InteractiveScene3D içinde uygulanıyor
-    // Buraya gelen nokta zaten snap uygulanmış nokta
-    
+    const { tempPoints } = get();
     set({ tempPoints: [...tempPoints, point] });
   },
   
-  clearTempPoints: () => set({ tempPoints: [] }),
+  /**
+   * Tüm geçici noktaları temizler
+   * Çizim iptal edildiğinde veya tamamlandığında kullanılır
+   */
+  clearTempPoints: () => {
+    set({ tempPoints: [] });
+  },
   
   // ============================================
-  // BORU TAMAMLAMA
+  // PIPE OPERATIONS - Boru İşlemleri
   // ============================================
   
+  /**
+   * Geçici noktalardan boru oluşturur
+   * En az 2 nokta gerekir
+   * Ardışık noktalar arasında boru segmentleri oluşturulur
+   */
   completePipe: () => {
     const { tempPoints, pipes, currentDiameter } = get();
     
+    // En az 2 nokta olmalı
     if (tempPoints.length < 2) return;
     
     const newPipes: PipeSegment[] = [];
@@ -175,7 +226,7 @@ export const useDrawingStore = create<DrawingState>((set, get) => ({
       const start = tempPoints[i];
       const end = tempPoints[i + 1];
       
-      // Uzunluğu hesapla
+      // Uzunluğu hesapla (3D Pisagor)
       const length = Math.sqrt(
         Math.pow(end.x - start.x, 2) +
         Math.pow(end.y - start.y, 2) +
@@ -197,40 +248,13 @@ export const useDrawingStore = create<DrawingState>((set, get) => ({
       tempPoints: []
     });
     
+    // Geçmişe kaydet
     get().saveToHistory();
   },
   
-  // ============================================
-  // COMPONENT İŞLEMLERİ
-  // ============================================
-  
-  addComponent: (component) => {
-    set((state) => ({
-      components: [...state.components, component]
-    }));
-    get().saveToHistory();
-  },
-  
-  removeComponent: (id) => {
-    set((state) => ({
-      components: state.components.filter(c => c.id !== id),
-      selectedId: state.selectedId === id ? null : state.selectedId
-    }));
-    get().saveToHistory();
-  },
-  
-  updateComponent: (id, updates) => {
-    set((state) => ({
-      components: state.components.map(c =>
-        c.id === id ? { ...c, ...updates } : c
-      )
-    }));
-  },
-  
-  // ============================================
-  // PIPE İŞLEMLERİ
-  // ============================================
-  
+  /**
+   * ID'ye göre boru siler
+   */
   removePipe: (id) => {
     set((state) => ({
       pipes: state.pipes.filter(p => p.id !== id),
@@ -240,17 +264,61 @@ export const useDrawingStore = create<DrawingState>((set, get) => ({
   },
   
   // ============================================
-  // SEÇİM İŞLEMLERİ
-  // ============================================
-  
-  selectObject: (id) => set({ selectedId: id }),
-  
-  // ============================================
-  // 🎯 SNAP İŞLEMLERİ
+  // COMPONENT OPERATIONS - Component İşlemleri
   // ============================================
   
   /**
-   * Belirli bir snap ayarını aç/kapat
+   * Yeni component ekler
+   */
+  addComponent: (component) => {
+    set((state) => ({
+      components: [...state.components, component]
+    }));
+    get().saveToHistory();
+  },
+  
+  /**
+   * ID'ye göre component siler
+   */
+  removeComponent: (id) => {
+    set((state) => ({
+      components: state.components.filter(c => c.id !== id),
+      selectedId: state.selectedId === id ? null : state.selectedId
+    }));
+    get().saveToHistory();
+  },
+  
+  /**
+   * Component özelliklerini günceller
+   * Partial update - sadece verilen alanlar değişir
+   */
+  updateComponent: (id, updates) => {
+    set((state) => ({
+      components: state.components.map(c =>
+        c.id === id ? { ...c, ...updates } : c
+      )
+    }));
+  },
+  
+  // ============================================
+  // SELECTION - Seçim İşlemleri
+  // ============================================
+  
+  /**
+   * Obje seçer veya seçimi kaldırır
+   * @param id - Obje ID'si veya null (seçimi kaldır)
+   */
+  selectObject: (id) => {
+    set({ selectedId: id });
+  },
+  
+  // ============================================
+  // 🎯 SNAP OPERATIONS - Snap İşlemleri
+  // ============================================
+  
+  /**
+   * Belirli bir snap ayarını aç/kapat yapar
+   * @param snapType - Toggle edilecek snap tipi
    */
   toggleSnap: (snapType) => {
     set((state) => ({
@@ -262,16 +330,21 @@ export const useDrawingStore = create<DrawingState>((set, get) => ({
   },
   
   /**
-   * Snap ayarlarını güncelle
+   * Snap ayarlarını toplu günceller
+   * @param settings - Güncellenecek ayarlar (partial)
    */
   updateSnapSettings: (settings) => {
     set((state) => ({
-      snapSettings: { ...state.snapSettings, ...settings }
+      snapSettings: { 
+        ...state.snapSettings, 
+        ...settings 
+      }
     }));
   },
   
   /**
-   * Grid snap toggle (geriye dönük uyumluluk)
+   * Grid snap'i aç/kapat (geriye dönük uyumluluk)
+   * Eski kod ile uyumluluk için korundu
    */
   toggleSnapToGrid: () => {
     set((state) => ({
@@ -283,38 +356,51 @@ export const useDrawingStore = create<DrawingState>((set, get) => ({
   },
   
   // ============================================
-  // DİĞER AYARLAR
-  // ============================================
-  
-  setGridSize: (size) => {
-    set((state) => ({
-      gridSize: size,
-      snapSettings: { ...state.snapSettings, gridSize: size }
-    }));
-  },
-  
-  setCurrentDiameter: (diameter) => set({ currentDiameter: diameter }),
-  
-  // ============================================
-  // UNDO/REDO SİSTEMİ
+  // OTHER SETTINGS - Diğer Ayarlar
   // ============================================
   
   /**
-   * Geçmişe kaydet
+   * Grid boyutunu ayarlar
+   * Hem gridSize hem de snapSettings.gridSize güncellenir
+   */
+  setGridSize: (size) => {
+    set((state) => ({
+      gridSize: size,
+      snapSettings: { 
+        ...state.snapSettings, 
+        gridSize: size 
+      }
+    }));
+  },
+  
+  /**
+   * Aktif boru çapını değiştirir
+   */
+  setCurrentDiameter: (diameter) => {
+    set({ currentDiameter: diameter });
+  },
+  
+  // ============================================
+  // UNDO/REDO SYSTEM - Geri Al/İleri Al
+  // ============================================
+  
+  /**
+   * Mevcut durumu geçmişe kaydeder
+   * Maksimum 50 adım tutulur
    */
   saveToHistory: () => {
     const { pipes, components, history, historyIndex } = get();
     
-    // Mevcut index'ten sonrasını sil
+    // Mevcut index'ten sonrasını sil (yeni dal oluştur)
     const newHistory = history.slice(0, historyIndex + 1);
     
-    // Yeni durumu ekle
+    // Yeni durumu ekle (deep copy)
     newHistory.push({ 
       pipes: JSON.parse(JSON.stringify(pipes)), 
       components: JSON.parse(JSON.stringify(components))
     });
     
-    // Maksimum 50 adım tut
+    // Maksimum 50 adım tut (bellek optimizasyonu)
     if (newHistory.length > 50) {
       newHistory.shift();
     }
@@ -326,7 +412,8 @@ export const useDrawingStore = create<DrawingState>((set, get) => ({
   },
   
   /**
-   * Geri al
+   * Bir adım geri gider
+   * En başta değilse bir önceki durumu yükler
    */
   undo: () => {
     const { history, historyIndex } = get();
@@ -344,7 +431,8 @@ export const useDrawingStore = create<DrawingState>((set, get) => ({
   },
   
   /**
-   * İleri al
+   * Bir adım ileri gider
+   * En sonda değilse bir sonraki durumu yükler
    */
   redo: () => {
     const { history, historyIndex } = get();
@@ -362,7 +450,8 @@ export const useDrawingStore = create<DrawingState>((set, get) => ({
   },
   
   /**
-   * Tümünü temizle
+   * Tüm çizimleri temizler
+   * Boş bir sahneye döner
    */
   clearAll: () => {
     set({
@@ -375,3 +464,9 @@ export const useDrawingStore = create<DrawingState>((set, get) => ({
     get().saveToHistory();
   }
 }));
+
+// ============================================
+// EXPORT
+// ============================================
+
+export default useDrawingStore;
