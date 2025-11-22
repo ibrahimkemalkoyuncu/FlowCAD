@@ -17,7 +17,9 @@ export interface SnapSettings {
   snapToMidpoints: boolean;
   snapToIntersections: boolean;
   snapToCenter: boolean;
+  snapToPerpendicular: boolean;  // ✅ Eklendi
   snapTolerance: number;
+  snapRadius: number;  // ✅ Eklendi (tolerance ile aynı şey ama farklı isim)
   gridSize: number;
 }
 
@@ -32,7 +34,9 @@ export const defaultSnapSettings: SnapSettings = {
   snapToMidpoints: false,
   snapToIntersections: false,
   snapToCenter: true,
+  snapToPerpendicular: false,  // ✅ Eklendi
   snapTolerance: 0.5,
+  snapRadius: 0.5,  // ✅ Eklendi
   gridSize: 1
 };
 
@@ -66,7 +70,8 @@ export function findSnapPoint(
     };
   }
 
-  const tolerance = snapSettings.snapTolerance || 0.5;
+  // snapRadius ve snapTolerance aynı şey (geriye dönük uyumluluk)
+  const tolerance = snapSettings.snapRadius || snapSettings.snapTolerance || 0.5;
   let closestSnap: SnapResult | null = null;
   let minDistance = tolerance;
 
