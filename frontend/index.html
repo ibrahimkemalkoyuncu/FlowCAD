@@ -1,61 +1,38 @@
 <!doctype html>
-<html lang="en">
+<html lang="tr">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>FlowCAD</title>
+    <title>FlowCAD - Tesisat Çizim Uygulaması</title>
     <style>
-      body { margin: 0; }
-      canvas { display: block; }
+      body { 
+        margin: 0;
+        padding: 0;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+          'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+          sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+      canvas { 
+        display: block; 
+      }
+      #root {
+        width: 100%;
+        height: 100vh;
+      }
     </style>
   </head>
   <body>
-     <!-- ÇALIŞMASI GARANTİLİ CDN
-    <script src="https://unpkg.com/three@0.152.2/build/three.min.js"></script>
-
-    <script>
-      // 1) Sahne
-      const scene = new THREE.Scene();
-
-      // 2) Kamera
-      const camera = new THREE.PerspectiveCamera(
-        75,
-        window.innerWidth / window.innerHeight,
-        0.1,
-        1000
-      );
-      camera.position.z = 3;
-
-      // 3) Renderer
-      const renderer = new THREE.WebGLRenderer();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      document.body.appendChild(renderer.domElement);
-
-      // 4) Küp
-      const geometry = new THREE.BoxGeometry();
-      const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-      const cube = new THREE.Mesh(geometry, material);
-      scene.add(cube);
-
-      // 5) Animasyon döngüsü
-      function animate() {
-        requestAnimationFrame(animate);
-
-        cube.rotation.x += 0.01;
-        cube.rotation.y += 0.01;
-
-        renderer.render(scene, camera);
-      }
-
-      animate();
-    </script> -->
-  </body>
-</html>
-
-
-
-
-
+    <!-- ============================================ -->
+    <!-- REACT ROOT ELEMENT - UYGULAMANIN ANA DİVİ   -->
+    <!-- ============================================ -->
+    <div id="root"></div>
+    
+    <!-- ============================================ -->
+    <!-- VITE ENTRY POINT - React Uygulamasını Yükler -->
+    <!-- ============================================ -->
+    <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
