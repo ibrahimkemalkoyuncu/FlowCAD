@@ -1,19 +1,35 @@
+// ============================================
+// MAIN - Uygulama Giriş Noktası
+// Konum: frontend/src/main.tsx
+// React DOM render ve global ayarlar
+// ============================================
+
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { Toaster } from 'react-hot-toast' // ✅ YENİ EKLEME
+import { Toaster } from 'react-hot-toast'
 import './index.css'
 import App from './App.tsx'
+
+// ============================================
+// ROOT RENDER - Uygulamayı DOM'a Bağla
+// ============================================
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <App />
-    {/* ✅ Toast notification sistemi */}
+    
+    {/* ============================================ */}
+    {/* TOAST NOTIFICATION SİSTEMİ                   */}
+    {/* React Hot Toast - Global bildirim yönetimi   */}
+    {/* ============================================ */}
     <Toaster 
       position="top-right"
       reverseOrder={false}
       gutter={8}
       toastOptions={{
-        // Varsayılan ayarlar
+        // ========================================
+        // VARSAYILAN AYARLAR
+        // ========================================
         duration: 4000,
         style: {
           background: '#363636',
@@ -21,7 +37,10 @@ createRoot(document.getElementById('root')!).render(
           padding: '16px',
           borderRadius: '8px',
         },
-        // Başarı mesajları
+        
+        // ========================================
+        // BAŞARI MESAJLARI (Success Toast)
+        // ========================================
         success: {
           duration: 3000,
           iconTheme: {
@@ -33,7 +52,10 @@ createRoot(document.getElementById('root')!).render(
             color: '#fff',
           },
         },
-        // Hata mesajları
+        
+        // ========================================
+        // HATA MESAJLARI (Error Toast)
+        // ========================================
         error: {
           duration: 5000,
           iconTheme: {
@@ -45,7 +67,10 @@ createRoot(document.getElementById('root')!).render(
             color: '#fff',
           },
         },
-        // Bilgi mesajları
+        
+        // ========================================
+        // YÜKLENİYOR MESAJLARI (Loading Toast)
+        // ========================================
         loading: {
           duration: Infinity,
         },
