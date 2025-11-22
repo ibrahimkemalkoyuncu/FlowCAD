@@ -2,10 +2,11 @@
 // EDITOR PAGE - Ana Çizim Editörü Sayfası
 // Konum: frontend/src/pages/EditorPage.tsx
 // SNAP sistemi ile geliştirilmiş, tamamen çalışan versiyon
-// onClose props ile BlueprintPanel ve MaterialCalculator çağrımı düzeltildi
+// React Router navigation düzeltildi
 // ============================================
 
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Canvas } from '@react-three/fiber';
 import { Toaster, toast } from 'react-hot-toast';
 import { SceneContent } from '../components/InteractiveScene3D';
@@ -20,10 +21,16 @@ import SnapPanel from '../components/SnapPanel';
 // ============================================
 
 export const EditorPage: React.FC = () => {
+  const navigate = useNavigate();
+  
   // Panel görünürlük durumları
   const [showMaterials, setShowMaterials] = useState(false);
   const [showBlueprints, setShowBlueprints] = useState(false);
   const [showSnapPanel, setShowSnapPanel] = useState(false);
+
+  // ============================================
+  // EVENT HANDLERS
+  // ============================================
 
   // Proje yöneticisi dönüş onayı
   const handleProjectManagerClick = () => {
@@ -34,7 +41,7 @@ export const EditorPage: React.FC = () => {
         <div className="flex gap-2 justify-center">
           <button
             onClick={() => {
-              window.location.href = '/';
+              navigate('/');
               toast.dismiss(t.id);
             }}
             className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium"
@@ -85,9 +92,13 @@ export const EditorPage: React.FC = () => {
     });
   };
 
+  // ============================================
+  // RENDER
+  // ============================================
+
   return (
     <div className="h-screen flex flex-col bg-gray-100">
-      {/* Toast */}
+      {/* Toast Notifications */}
       <Toaster position="top-center" />
 
       {/* Toolbar */}
@@ -99,7 +110,7 @@ export const EditorPage: React.FC = () => {
         onShowSnapPanel={() => setShowSnapPanel(!showSnapPanel)}
       />
 
-      {/* Main area */}
+      {/* Main 3D Canvas Area */}
       <div className="flex-1 relative overflow-hidden">
         <Canvas
           camera={{ position: [10, 10, 10], fov: 50 }}
@@ -109,19 +120,19 @@ export const EditorPage: React.FC = () => {
           <SceneContent />
         </Canvas>
 
-        {/* Property panel on the right */}
+        {/* Property Panel - Sağda */}
         <div className="absolute top-0 right-0 h-full">
           <PropertyPanel />
         </div>
 
-        {/* SnapPanel (if open) */}
+        {/* Snap Panel - Modal */}
         {showSnapPanel && (
           <div className="absolute top-4 right-96 z-50">
             <SnapPanel onClose={() => setShowSnapPanel(false)} />
           </div>
         )}
 
-        {/* Blueprint modal */}
+        {/* Blueprint Panel - Modal */}
         {showBlueprints && (
           <div className="absolute inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-40">
             <div className="w-full max-w-4xl max-h-[90vh] overflow-hidden">
@@ -130,7 +141,7 @@ export const EditorPage: React.FC = () => {
           </div>
         )}
 
-        {/* Material calculator modal */}
+        {/* Material Calculator - Modal */}
         {showMaterials && (
           <div className="absolute inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-40">
             <div className="w-full max-w-5xl max-h-[90vh] overflow-hidden">
@@ -139,7 +150,7 @@ export const EditorPage: React.FC = () => {
           </div>
         )}
 
-        {/* Keyboard help */}
+        {/* Keyboard Shortcuts Help */}
         <div className="absolute bottom-4 right-4 bg-white/95 backdrop-blur-md rounded-xl shadow-2xl p-4 text-xs border border-gray-200 z-30 max-w-xs">
           <div className="font-bold text-gray-800 mb-3 text-sm flex items-center gap-2">
             <span className="text-lg">⌨️</span>
