@@ -4,18 +4,34 @@
 // React Router ile sayfa yönlendirmeleri
 // ============================================
 
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom';
 import { ProjectList } from './components/ProjectList';
 import { EditorPage } from './pages/EditorPage';
 import { useProjectStore } from './store/useProjectStore';
+
+// ============================================
+// PROJECT LIST WRAPPER - Navigation Hook İçin
+// ============================================
+
+function ProjectListWrapper() {
+  const navigate = useNavigate();
+  const { setCurrentProject } = useProjectStore();
+
+  return (
+    <ProjectList 
+      onSelect={(project) => {
+        setCurrentProject(project);
+        navigate('/editor');
+      }} 
+    />
+  );
+}
 
 // ============================================
 // MAIN APP COMPONENT
 // ============================================
 
 function App() {
-  const { setCurrentProject } = useProjectStore();
-
   return (
     <BrowserRouter>
       <div className="min-h-screen bg-gray-50">
@@ -23,14 +39,7 @@ function App() {
           {/* Ana Sayfa - Proje Listesi */}
           <Route 
             path="/" 
-            element={
-              <ProjectList 
-                onSelect={(project) => {
-                  setCurrentProject(project);
-                  window.location.href = '/editor';
-                }} 
-              />
-            } 
+            element={<ProjectListWrapper />} 
           />
           
           {/* Editor Sayfası */}
