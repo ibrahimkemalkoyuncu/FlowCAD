@@ -14,8 +14,9 @@ import BlueprintPanel from '../components/BlueprintPanel';
 import PropertyPanel from '../components/PropertyPanel';
 import MaterialCalculator from '../components/MaterialCalculator';
 import SnapPanel from '../components/SnapPanel';
-import { useBlueprintStore, type Blueprint } from '../store/useBlueprintStore';
+import { useBlueprintStore } from '../store/useBlueprintStore';
 import { blueprintApi } from '../services/blueprintApi';
+import { dwgParser } from '../services/dwgParser';
 
 // ============================================
 // EDITOR PAGE COMPONENT
@@ -53,40 +54,53 @@ export const EditorPage: React.FC = () => {
       return;
     }
 
-    const loadingToast = toast.loading('Dosya yükleniyor...');
+    const loadingToast = toast.loading('DXF dosyası işleniyor...');
 
     try {
-      // Upload file to server
+      // Parse DXF/DWG file content
+      const content = await file.text();
+      let parsedDWG = await dwgParser.parseDWG(content);
+      
+      // Scale (AutoCAD typically uses mm, we use meters)
+      const scale = 0.01;
+      parsedDWG = dwgParser.scaleDWG(parsedDWG, scale);
+      
+      // Center the drawing
+      parsedDWG = dwgParser.centerDWG(parsedDWG);
+      
+      // Upload file to server (for storage/backup)
       const result = await blueprintApi.upload(file);
       
       // Get API base URL for constructing full URL
       const apiUrl = import.meta.env.VITE_API_URL || 'https://localhost:7121';
       
-      // Create blueprint from uploaded file
-      const blueprint: Blueprint = {
+      // Create blueprint from parsed data
+      const blueprint: any = {
         id: `blueprint_${Date.now()}`,
         name: file.name,
         type: fileExtension === '.dxf' ? 'dxf' : 'dwg',
         url: `${apiUrl}${result.url}`,
-        width: 20,
-        height: 20,
+        width: parsedDWG.bounds.maxX - parsedDWG.bounds.minX,
+        height: parsedDWG.bounds.maxY - parsedDWG.bounds.minY,
         scale: 1,
         position: { x: 0, y: 0, z: 0 },
         rotation: 0,
         opacity: 0.7,
         visible: true,
-        locked: false
+        locked: false,
+        dwgData: parsedDWG // Attach parsed geometry data
       };
       
       addBlueprint(blueprint);
-      toast.success(`${file.name} başarıyla yüklendi!`, { id: loadingToast });
+      toast.success(`${file.name} yüklendi! ${parsedDWG.entities.length} entity bulundu.`, { id: loadingToast });
       
       // Show blueprints panel
       setShowBlueprints(true);
       
     } catch (error) {
-      console.error('File upload error:', error);
-      toast.error('Dosya yüklenirken bir hata oluştu! Backend bağlantısını kontrol edin.', { id: loadingToast });
+      console.error('File processing error:', error);
+      const errorMsg = error instanceof Error ? error.message : 'Bilinmeyen hata';
+      toast.error(`Dosya işlenirken hata: ${errorMsg}`, { id: loadingToast });
     }
     
     // Reset input
