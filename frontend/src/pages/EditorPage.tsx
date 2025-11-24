@@ -14,38 +14,85 @@ import BlueprintPanel from '../components/BlueprintPanel';
 import PropertyPanel from '../components/PropertyPanel';
 import MaterialCalculator from '../components/MaterialCalculator';
 import SnapPanel from '../components/SnapPanel';
-import ProjectSelector from '../components/ProjectSelector';
-import { useProjectStore } from '../store/useProjectStore';
-import type { Project } from '../types';
+import { useBlueprintStore, type Blueprint } from '../store/useBlueprintStore';
 
 // ============================================
 // EDITOR PAGE COMPONENT
 // ============================================
 
 export const EditorPage: React.FC = () => {
-  const { setCurrentProject } = useProjectStore();
+  const { addBlueprint } = useBlueprintStore();
   
   // Panel görünürlük durumları
   const [showMaterials, setShowMaterials] = useState(false);
   const [showBlueprints, setShowBlueprints] = useState(false);
   const [showSnapPanel, setShowSnapPanel] = useState(false);
-  const [showProjectSelector, setShowProjectSelector] = useState(false);
+  
+  // File input ref for DWG/DXF files
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   // ============================================
   // EVENT HANDLERS
   // ============================================
 
-  // Proje aç - Modal göster
-  const handleOpenProject = () => {
-    setShowProjectSelector(true);
+  // Dosya aç - DWG/DXF file picker (AutoCAD style)
+  const handleOpenFile = () => {
+    fileInputRef.current?.click();
   };
 
-  // Proje seçildiğinde
-  const handleProjectSelect = (project: Project) => {
-    setCurrentProject(project);
-    toast.success(`📂 ${project.name} projesi açıldı!`, {
-      duration: 3000
-    });
+  // DWG/DXF dosyası seçildiğinde
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase();
+    
+    if (fileExtension !== '.dwg' && fileExtension !== '.dxf') {
+      toast.error('Sadece DWG veya DXF dosyaları desteklenir!');
+      return;
+    }
+
+    const loadingToast = toast.loading('Dosya yükleniyor...');
+
+    try {
+      // Read file content
+      const reader = new FileReader();
+      reader.onload = () => {
+        // Create blueprint from DWG/DXF
+        const blueprint: Blueprint = {
+          id: `blueprint_${Date.now()}`,
+          name: file.name,
+          type: fileExtension === '.dxf' ? 'dxf' : 'dwg',
+          url: '', // Will be set after parsing
+          width: 20,
+          height: 20,
+          scale: 1,
+          position: { x: 0, y: 0, z: 0 },
+          rotation: 0,
+          opacity: 0.7,
+          visible: true,
+          locked: false
+        };
+        
+        addBlueprint(blueprint);
+        toast.success(`${file.name} başarıyla yüklendi!`, { id: loadingToast });
+        
+        // Show blueprints panel
+        setShowBlueprints(true);
+      };
+      
+      reader.onerror = () => {
+        toast.error('Dosya okuma hatası!', { id: loadingToast });
+      };
+      
+      reader.readAsText(file);
+    } catch (error) {
+      console.error('File load error:', error);
+      toast.error('Dosya yüklenirken bir hata oluştu!', { id: loadingToast });
+    }
+    
+    // Reset input
+    e.target.value = '';
   };
 
   // Yeni proje oluşturma onayı
@@ -87,11 +134,20 @@ export const EditorPage: React.FC = () => {
       {/* Toast Notifications */}
       <Toaster position="top-center" />
 
+      {/* Hidden file input for DWG/DXF */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".dwg,.dxf"
+        style={{ display: 'none' }}
+        onChange={handleFileSelect}
+      />
+
       {/* Toolbar */}
       <EnhancedToolbar
         onShowBlueprints={() => setShowBlueprints(!showBlueprints)}
         onShowMaterials={() => setShowMaterials(!showMaterials)}
-        onShowProjectManager={handleOpenProject}
+        onShowProjectManager={handleOpenFile}
         onNewProject={handleNewProject}
         onShowSnapPanel={() => setShowSnapPanel(!showSnapPanel)}
       />
@@ -134,14 +190,6 @@ export const EditorPage: React.FC = () => {
               <MaterialCalculator onClose={() => setShowMaterials(false)} />
             </div>
           </div>
-        )}
-
-        {/* Project Selector - Modal (Yeni!) */}
-        {showProjectSelector && (
-          <ProjectSelector
-            onClose={() => setShowProjectSelector(false)}
-            onSelect={handleProjectSelect}
-          />
         )}
 
         {/* Keyboard Shortcuts Help */}
