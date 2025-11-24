@@ -12,7 +12,7 @@ export const DWGRenderer: React.FC = () => {
   return (
     <>
       {blueprints
-        .filter(bp => bp.type === 'dxf' && bp.visible && (bp as any).dwgData)
+        .filter(bp => (bp.type === 'dxf' || bp.type === 'dwg') && bp.visible && (bp as any).dwgData)
         .map(blueprint => {
           const dwgData = (blueprint as any).dwgData;
           return (

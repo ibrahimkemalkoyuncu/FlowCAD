@@ -5,6 +5,7 @@ import React, { useRef } from 'react';
 import { useTexture } from '@react-three/drei';
 import * as THREE from 'three';
 import { useBlueprintStore, type Blueprint } from '../store/useBlueprintStore';
+import { DWGRenderer } from './DWGRenderer';
 
 export const BlueprintRenderer: React.FC = () => {
   const { blueprints } = useBlueprintStore();
@@ -16,11 +17,8 @@ export const BlueprintRenderer: React.FC = () => {
           <BlueprintMesh key={blueprint.id} blueprint={blueprint} />
         )
       ))}
-      {blueprints.map(blueprint => (
-        blueprint.visible && (blueprint.type === 'dxf' || blueprint.type === 'dwg') && (
-          <DXFRenderer key={blueprint.id} blueprint={blueprint} />
-        )
-      ))}
+      {/* Use DWGRenderer for actual DXF/DWG rendering */}
+      <DWGRenderer />
     </>
   );
 };
@@ -103,29 +101,4 @@ const BlueprintMesh: React.FC<BlueprintMeshProps> = ({ blueprint }) => {
   );
 };
 
-// ============================================
-// 4. DXF Renderer (Basitleştirilmiş)
-// ============================================
-const DXFRenderer: React.FC<BlueprintMeshProps> = ({ blueprint }) => {
-  // DXF rendering için Three.js Line kullanımı
-  // Gerçek projede dxf-parser ile parse edilmeli
-  
-  return (
-    <group 
-      position={[blueprint.position.x, blueprint.position.y, blueprint.position.z]}
-      rotation={[0, blueprint.rotation * Math.PI / 180, 0]}
-      scale={blueprint.scale}
-    >
-      {/* Placeholder - gerçek DXF geometrisi buraya gelecek */}
-      <mesh>
-        <boxGeometry args={[blueprint.width, 0.1, blueprint.height]} />
-        <meshBasicMaterial 
-          color="#94a3b8" 
-          transparent 
-          opacity={blueprint.opacity}
-          wireframe
-        />
-      </mesh>
-    </group>
-  );
-};
+// DXFRenderer placeholder removed - now using DWGRenderer component instead
