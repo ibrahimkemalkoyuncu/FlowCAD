@@ -13,7 +13,10 @@ namespace FlowCAD.Api.Controllers
         public BlueprintController(IWebHostEnvironment env)
         {
             _env = env;
-            _uploadsPath = Path.Combine(_env.WebRootPath, "uploads", "blueprints");
+            
+            // WebRootPath null olabilir, bu durumda ContentRootPath kullan
+            var webRoot = _env.WebRootPath ?? Path.Combine(_env.ContentRootPath, "wwwroot");
+            _uploadsPath = Path.Combine(webRoot, "uploads", "blueprints");
 
             // Klasörü oluştur
             if (!Directory.Exists(_uploadsPath))
