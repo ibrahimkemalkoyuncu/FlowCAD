@@ -81,6 +81,7 @@ interface DrawingState {
   snapSettings: SnapSettings;
   gridSize: number;
   snapToGrid: boolean;
+  showGrid: boolean;
   history: {
     pipes: PipeSegment[][];
     components: ComponentInstance[][];
@@ -110,6 +111,7 @@ interface DrawingState {
   // Actions - Snap
   toggleSnap: (key: keyof SnapSettings) => void;
   updateSnapSettings: (settings: Partial<SnapSettings>) => void;
+  toggleGrid: () => void;
 
   // Actions - History
   undo: () => void;
@@ -167,6 +169,7 @@ export const useDrawingStore = create<DrawingState>((set, get) => ({
   snapSettings: defaultSnapSettings,
   gridSize: 1,
   snapToGrid: true,
+  showGrid: true,
   history: {
     pipes: [],
     components: []
@@ -338,6 +341,16 @@ export const useDrawingStore = create<DrawingState>((set, get) => ({
       };
     });
   },
+
+  /**
+   * Izgarayı aç/kapat
+   */
+  toggleGrid: () => set((state) => ({
+    snapSettings: {
+      ...state.snapSettings,
+      showGrid: !state.snapSettings.showGrid
+    }
+  })),
 
   // ============================================
   // HISTORY ACTIONS

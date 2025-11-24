@@ -453,7 +453,11 @@ const getComponentGeometry = (component: ComponentInstance, scale: number = 1) =
 // SCENE CONTENT - Ana Sahne
 // ============================================
 
-export const SceneContent: React.FC = () => {
+interface SceneContentProps {
+  showGrid?: boolean;
+}
+
+export const SceneContent: React.FC<SceneContentProps> = ({ showGrid = true }) => {
   const { mode } = useDrawingStore();
   
   return (
@@ -471,18 +475,20 @@ export const SceneContent: React.FC = () => {
       <directionalLight position={[10, 10, 5]} intensity={0.8} castShadow />
       <pointLight position={[-10, 10, -10]} intensity={0.3} />
       
-      <Grid 
-        args={[50, 50]} 
-        cellSize={1}
-        cellThickness={0.6}
-        cellColor="#9ca3af"
-        sectionSize={5}
-        sectionThickness={1.5}
-        sectionColor="#3b82f6"
-        fadeDistance={100}
-        fadeStrength={1}
-        followCamera={false}
-      />
+      {showGrid && (
+        <Grid 
+          args={[50, 50]} 
+          cellSize={1}
+          cellThickness={0.6}
+          cellColor="#9ca3af"
+          sectionSize={5}
+          sectionThickness={1.5}
+          sectionColor="#3b82f6"
+          fadeDistance={100}
+          fadeStrength={1}
+          followCamera={false}
+        />
+      )}
       
       <BlueprintRenderer />
       

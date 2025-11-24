@@ -29,6 +29,7 @@ export const EditorPage: React.FC = () => {
   const [showMaterials, setShowMaterials] = useState(false);
   const [showBlueprints, setShowBlueprints] = useState(false);
   const [showSnapPanel, setShowSnapPanel] = useState(false);
+  const [showGrid, setShowGrid] = useState(true); // Grid visibility toggle
   
   // File input ref for DWG/DXF files
   const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -162,6 +163,8 @@ export const EditorPage: React.FC = () => {
         onShowProjectManager={handleOpenFile}
         onNewProject={handleNewProject}
         onShowSnapPanel={() => setShowSnapPanel(!showSnapPanel)}
+        onToggleGrid={() => setShowGrid(!showGrid)}
+        showGrid={showGrid}
       />
 
       {/* Main 3D Canvas Area */}
@@ -171,7 +174,7 @@ export const EditorPage: React.FC = () => {
           shadows
           className="w-full h-full"
         >
-          <SceneContent />
+          <SceneContent showGrid={showGrid} />
         </Canvas>
 
         {/* Property Panel - Sağda */}
