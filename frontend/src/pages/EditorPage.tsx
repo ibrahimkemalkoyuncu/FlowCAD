@@ -6,7 +6,6 @@
 // ============================================
 
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Canvas } from '@react-three/fiber';
 import { Toaster, toast } from 'react-hot-toast';
 import { SceneContent } from '../components/InteractiveScene3D';
@@ -15,50 +14,37 @@ import BlueprintPanel from '../components/BlueprintPanel';
 import PropertyPanel from '../components/PropertyPanel';
 import MaterialCalculator from '../components/MaterialCalculator';
 import SnapPanel from '../components/SnapPanel';
+import ProjectSelector from '../components/ProjectSelector';
+import { useProjectStore } from '../store/useProjectStore';
+import type { Project } from '../types';
 
 // ============================================
 // EDITOR PAGE COMPONENT
 // ============================================
 
 export const EditorPage: React.FC = () => {
-  const navigate = useNavigate();
+  const { setCurrentProject } = useProjectStore();
   
   // Panel görünürlük durumları
   const [showMaterials, setShowMaterials] = useState(false);
   const [showBlueprints, setShowBlueprints] = useState(false);
   const [showSnapPanel, setShowSnapPanel] = useState(false);
+  const [showProjectSelector, setShowProjectSelector] = useState(false);
 
   // ============================================
   // EVENT HANDLERS
   // ============================================
 
-  // Proje yöneticisi dönüş onayı
-  const handleProjectManagerClick = () => {
-    toast((t) => (
-      <div className="text-center">
-        <p className="font-medium mb-3">Ana sayfaya dönmek istediğinizden emin misiniz?</p>
-        <p className="text-sm text-gray-600 mb-4">Kaydedilmemiş değişiklikler kaybolacak.</p>
-        <div className="flex gap-2 justify-center">
-          <button
-            onClick={() => {
-              navigate('/');
-              toast.dismiss(t.id);
-            }}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium"
-          >
-            Evet, Dön
-          </button>
-          <button
-            onClick={() => toast.dismiss(t.id)}
-            className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors font-medium"
-          >
-            İptal
-          </button>
-        </div>
-      </div>
-    ), {
-      duration: Infinity,
-      style: { background: '#fff', color: '#000', padding: '20px' }
+  // Proje aç - Modal göster
+  const handleOpenProject = () => {
+    setShowProjectSelector(true);
+  };
+
+  // Proje seçildiğinde
+  const handleProjectSelect = (project: Project) => {
+    setCurrentProject(project);
+    toast.success(`📂 ${project.name} projesi açıldı!`, {
+      duration: 3000
     });
   };
 
@@ -105,7 +91,7 @@ export const EditorPage: React.FC = () => {
       <EnhancedToolbar
         onShowBlueprints={() => setShowBlueprints(!showBlueprints)}
         onShowMaterials={() => setShowMaterials(!showMaterials)}
-        onShowProjectManager={handleProjectManagerClick}
+        onShowProjectManager={handleOpenProject}
         onNewProject={handleNewProject}
         onShowSnapPanel={() => setShowSnapPanel(!showSnapPanel)}
       />
@@ -148,6 +134,14 @@ export const EditorPage: React.FC = () => {
               <MaterialCalculator onClose={() => setShowMaterials(false)} />
             </div>
           </div>
+        )}
+
+        {/* Project Selector - Modal (Yeni!) */}
+        {showProjectSelector && (
+          <ProjectSelector
+            onClose={() => setShowProjectSelector(false)}
+            onSelect={handleProjectSelect}
+          />
         )}
 
         {/* Keyboard Shortcuts Help */}

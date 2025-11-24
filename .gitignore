@@ -12,6 +12,7 @@ appsettings.Development.json
 # React
 node_modules/
 /build
+dist/
 /.env
 
 # SQL Server
