@@ -15,6 +15,7 @@ import PropertyPanel from '../components/PropertyPanel';
 import MaterialCalculator from '../components/MaterialCalculator';
 import SnapPanel from '../components/SnapPanel';
 import { useBlueprintStore, type Blueprint } from '../store/useBlueprintStore';
+import { blueprintApi } from '../services/blueprintApi';
 
 // ============================================
 // EDITOR PAGE COMPONENT
@@ -55,40 +56,37 @@ export const EditorPage: React.FC = () => {
     const loadingToast = toast.loading('Dosya yükleniyor...');
 
     try {
-      // Read file content
-      const reader = new FileReader();
-      reader.onload = () => {
-        // Create blueprint from DWG/DXF
-        const blueprint: Blueprint = {
-          id: `blueprint_${Date.now()}`,
-          name: file.name,
-          type: fileExtension === '.dxf' ? 'dxf' : 'dwg',
-          url: '', // Will be set after parsing
-          width: 20,
-          height: 20,
-          scale: 1,
-          position: { x: 0, y: 0, z: 0 },
-          rotation: 0,
-          opacity: 0.7,
-          visible: true,
-          locked: false
-        };
-        
-        addBlueprint(blueprint);
-        toast.success(`${file.name} başarıyla yüklendi!`, { id: loadingToast });
-        
-        // Show blueprints panel
-        setShowBlueprints(true);
+      // Upload file to server
+      const result = await blueprintApi.upload(file);
+      
+      // Get API base URL for constructing full URL
+      const apiUrl = import.meta.env.VITE_API_URL || 'https://localhost:7121';
+      
+      // Create blueprint from uploaded file
+      const blueprint: Blueprint = {
+        id: `blueprint_${Date.now()}`,
+        name: file.name,
+        type: fileExtension === '.dxf' ? 'dxf' : 'dwg',
+        url: `${apiUrl}${result.url}`,
+        width: 20,
+        height: 20,
+        scale: 1,
+        position: { x: 0, y: 0, z: 0 },
+        rotation: 0,
+        opacity: 0.7,
+        visible: true,
+        locked: false
       };
       
-      reader.onerror = () => {
-        toast.error('Dosya okuma hatası!', { id: loadingToast });
-      };
+      addBlueprint(blueprint);
+      toast.success(`${file.name} başarıyla yüklendi!`, { id: loadingToast });
       
-      reader.readAsText(file);
+      // Show blueprints panel
+      setShowBlueprints(true);
+      
     } catch (error) {
-      console.error('File load error:', error);
-      toast.error('Dosya yüklenirken bir hata oluştu!', { id: loadingToast });
+      console.error('File upload error:', error);
+      toast.error('Dosya yüklenirken bir hata oluştu! Backend bağlantısını kontrol edin.', { id: loadingToast });
     }
     
     // Reset input
