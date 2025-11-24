@@ -44,10 +44,10 @@ export const BoilerModel: React.FC<BoilerProps> = ({ position, selected, onClick
         <meshStandardMaterial color="#1f2937" />
       </mesh>
 
-      {/* Dijital ekran */}
+      {/* Dijital ekran - LED gösterge efekti */}
       <mesh position={[0, 1.3, 0.19]}>
         <planeGeometry args={[0.15, 0.08]} />
-        <meshStandardMaterial color="#10b981" emissive="#10b981" emissiveIntensity={0.5} />
+        <meshBasicMaterial color="#10b981" />
       </mesh>
 
       {/* ✅ GİRİŞ BAĞLANTISI (Sol alt - Soğuk Su) */}
@@ -162,11 +162,7 @@ export const MeterModel: React.FC<MeterProps> = ({ position, selected, onClick }
       {/* Sayılar (LED gösterge efekti) */}
       <mesh position={[0, 0.35, 0.14]}>
         <planeGeometry args={[0.2, 0.08]} />
-        <meshStandardMaterial 
-          color="#ff0000" 
-          emissive="#ff0000" 
-          emissiveIntensity={0.5} 
-        />
+        <meshBasicMaterial color="#ff0000" />
       </mesh>
 
       {/* ✅ GİRİŞ BAĞLANTISI (Sol) */}
