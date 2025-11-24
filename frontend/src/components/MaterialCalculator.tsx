@@ -50,14 +50,14 @@ const MaterialCalculator: React.FC<MaterialCalculatorProps> = ({ onClose }) => {
     const summary: Record<string, MaterialSummary> = {};
 
     pipes.forEach(pipe => {
-      const key = `${pipe.diameter}_${pipe.material}`;
+      const key = `${pipe.diameter}_${pipe.material || 'PPR'}`;
       
       if (!summary[key]) {
         summary[key] = {
           diameter: pipe.diameter,
           length: 0,
           count: 0,
-          material: pipe.material
+          material: pipe.material || 'PPR'
         };
       }
 

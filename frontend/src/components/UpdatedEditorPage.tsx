@@ -2,8 +2,8 @@
 // 13. UpdatedEditorPage.tsx - Güncellenmiş Editor
 // ============================================
 import React, { useState } from "react";
-import { EnhancedToolbar } from "./EnhancedToolbar";
-import { MaterialCalculator } from "./MaterialCalculator";
+import EnhancedToolbar from "./EnhancedToolbar";
+import MaterialCalculator from "./MaterialCalculator";
 import { PropertyPanel } from "./PropertyPanel";
 import { SceneContent } from "./InteractiveScene3D"; // InteractiveScene3D yerine SceneContent import et
 

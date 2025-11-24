@@ -3,7 +3,6 @@
 // ============================================
 import React, { useRef } from 'react';
 import * as THREE from 'three';
-import { useFrame } from '@react-three/fiber';
 
 // ============================================
 // KOMBİ MODELİ (Gerçekçi)
@@ -48,7 +47,7 @@ export const BoilerModel: React.FC<BoilerProps> = ({ position, selected, onClick
       {/* Dijital ekran */}
       <mesh position={[0, 1.3, 0.19]}>
         <planeGeometry args={[0.15, 0.08]} />
-        <meshBasicMaterial color="#10b981" emissive="#10b981" emissiveIntensity={0.5} />
+        <meshStandardMaterial color="#10b981" emissive="#10b981" emissiveIntensity={0.5} />
       </mesh>
 
       {/* ✅ GİRİŞ BAĞLANTISI (Sol alt - Soğuk Su) */}
@@ -163,7 +162,7 @@ export const MeterModel: React.FC<MeterProps> = ({ position, selected, onClick }
       {/* Sayılar (LED gösterge efekti) */}
       <mesh position={[0, 0.35, 0.14]}>
         <planeGeometry args={[0.2, 0.08]} />
-        <meshBasicMaterial 
+        <meshStandardMaterial 
           color="#ff0000" 
           emissive="#ff0000" 
           emissiveIntensity={0.5} 

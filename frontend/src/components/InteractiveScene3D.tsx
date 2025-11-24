@@ -26,8 +26,7 @@ const ClickableGroundPlane: React.FC = () => {
     completePipe, 
     snapSettings,
     pipes,
-    components,
-    tempPoints 
+    components
   } = useDrawingStore();
   
   const { camera, size } = useThree();
