@@ -61,8 +61,8 @@ export const EditorPage: React.FC = () => {
       const content = await file.text();
       let parsedDWG = await dwgParser.parseDWG(content);
       
-      // Scale (AutoCAD typically uses mm, we use meters)
-      const scale = 0.01;
+      // Scale (AutoCAD typically uses mm, we use meters - increased for better visibility)
+      const scale = 0.1;
       parsedDWG = dwgParser.scaleDWG(parsedDWG, scale);
       
       // Center the drawing
@@ -83,9 +83,9 @@ export const EditorPage: React.FC = () => {
         width: parsedDWG.bounds.maxX - parsedDWG.bounds.minX,
         height: parsedDWG.bounds.maxY - parsedDWG.bounds.minY,
         scale: 1,
-        position: { x: 0, y: 0, z: 0 },
+        position: { x: 0, y: 0.1, z: 0 },
         rotation: 0,
-        opacity: 0.7,
+        opacity: 1.0,
         visible: true,
         locked: false,
         dwgData: parsedDWG // Attach parsed geometry data

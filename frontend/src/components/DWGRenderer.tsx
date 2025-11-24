@@ -67,33 +67,39 @@ const DWGLine: React.FC<{ entity: any; opacity: number }> = ({ entity, opacity }
     <Line
       points={points}
       color={getEntityColor(entity.color)}
-      lineWidth={1}
+      lineWidth={2}
+      transparent
+      opacity={opacity}
+      dashed={false}
+    />
+  );
+};
+
+const DWGCircle: React.FC<{ entity: any; opacity: number }> = ({ entity, opacity }) => {
+  const points: THREE.Vector3[] = [];
+  const segments = 64;
+  
+  for (let i = 0; i <= segments; i++) {
+    const angle = (i / segments) * Math.PI * 2;
+    const x = entity.position.x + entity.radius * Math.cos(angle);
+    const y = entity.position.y + entity.radius * Math.sin(angle);
+    points.push(new THREE.Vector3(x, entity.position.z, -y));
+  }
+  
+  return (
+    <Line
+      points={points}
+      color={getEntityColor(entity.color)}
+      lineWidth={2}
       transparent
       opacity={opacity}
     />
   );
 };
 
-const DWGCircle: React.FC<{ entity: any; opacity: number }> = ({ entity, opacity }) => {
-  return (
-    <mesh
-      position={[entity.position.x, entity.position.z, -entity.position.y]}
-      rotation={[-Math.PI / 2, 0, 0]}
-    >
-      <ringGeometry args={[entity.radius * 0.98, entity.radius, 64]} />
-      <meshBasicMaterial
-        color={getEntityColor(entity.color)}
-        transparent
-        opacity={opacity}
-        side={THREE.DoubleSide}
-      />
-    </mesh>
-  );
-};
-
 const DWGArc: React.FC<{ entity: any; opacity: number }> = ({ entity, opacity }) => {
   const points: THREE.Vector3[] = [];
-  const segments = 32;
+  const segments = 64;
   const startAngle = entity.startAngle * Math.PI / 180;
   const endAngle = entity.endAngle * Math.PI / 180;
   const angleRange = endAngle - startAngle;
@@ -109,7 +115,7 @@ const DWGArc: React.FC<{ entity: any; opacity: number }> = ({ entity, opacity })
     <Line
       points={points}
       color={getEntityColor(entity.color)}
-      lineWidth={1}
+      lineWidth={2}
       transparent
       opacity={opacity}
     />
@@ -123,7 +129,7 @@ const DWGPolyline: React.FC<{ entity: any; opacity: number }> = ({ entity, opaci
     <Line
       points={points}
       color={getEntityColor(entity.color)}
-      lineWidth={1}
+      lineWidth={2}
       transparent
       opacity={opacity}
     />
