@@ -17,7 +17,7 @@ export const BlueprintRenderer: React.FC = () => {
         )
       ))}
       {blueprints.map(blueprint => (
-        blueprint.visible && blueprint.type === 'dxf' && (
+        blueprint.visible && (blueprint.type === 'dxf' || blueprint.type === 'dwg') && (
           <DXFRenderer key={blueprint.id} blueprint={blueprint} />
         )
       ))}
