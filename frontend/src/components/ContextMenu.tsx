@@ -17,6 +17,7 @@ interface ContextMenuProps {
   y: number;
   onClose: () => void;
   onShowBlueprints: () => void;
+  onShowBlueprintAddModal: () => void;
   onShowMaterials: () => void;
   onShowSnapPanel: () => void;
 }
@@ -40,7 +41,8 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
   x,
   y,
   onClose,
-  onShowBlueprints,
+  onShowBlueprints: _onShowBlueprints, // Kept for future use
+  onShowBlueprintAddModal,
   onShowMaterials,
   onShowSnapPanel
 }) => {
@@ -212,7 +214,7 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
       label: 'Klavuz Ekle',
       icon: '📋',
       action: () => {
-        onShowBlueprints();
+        onShowBlueprintAddModal();
         onClose();
       }
     },

@@ -12,6 +12,7 @@ import { Toaster, toast } from 'react-hot-toast';
 import { SceneContent } from '../components/InteractiveScene3D';
 import EnhancedToolbar from '../components/EnhancedToolbar';
 import BlueprintPanel from '../components/BlueprintPanel';
+import BlueprintAddModal from '../components/BlueprintAddModal';
 import PropertyPanel from '../components/PropertyPanel';
 import MaterialCalculator from '../components/MaterialCalculator';
 import SnapPanel from '../components/SnapPanel';
@@ -30,6 +31,7 @@ export const EditorPage: React.FC = () => {
   // Panel görünürlük durumları
   const [showMaterials, setShowMaterials] = useState(false);
   const [showBlueprints, setShowBlueprints] = useState(false);
+  const [showBlueprintAddModal, setShowBlueprintAddModal] = useState(false);
   const [showSnapPanel, setShowSnapPanel] = useState(false);
   const [showGrid, setShowGrid] = useState(true); // Grid visibility toggle
   
@@ -179,6 +181,7 @@ export const EditorPage: React.FC = () => {
           y={contextMenu.y}
           onClose={handleCloseContextMenu}
           onShowBlueprints={() => setShowBlueprints(true)}
+          onShowBlueprintAddModal={() => setShowBlueprintAddModal(true)}
           onShowMaterials={() => setShowMaterials(true)}
           onShowSnapPanel={() => setShowSnapPanel(true)}
         />
@@ -233,6 +236,11 @@ export const EditorPage: React.FC = () => {
               <MaterialCalculator onClose={() => setShowMaterials(false)} />
             </div>
           </div>
+        )}
+
+        {/* Blueprint Add Modal - Klavuz Ekle penceresi (Issue #7) */}
+        {showBlueprintAddModal && (
+          <BlueprintAddModal onClose={() => setShowBlueprintAddModal(false)} />
         )}
 
         {/* Keyboard Shortcuts Help */}
