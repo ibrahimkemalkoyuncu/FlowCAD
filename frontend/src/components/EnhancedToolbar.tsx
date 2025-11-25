@@ -20,6 +20,8 @@ interface EnhancedToolbarProps {
   onShowProjectManager?: () => void;
   onNewProject?: () => void;
   onShowSnapPanel?: () => void;  // 🎯 YENİ: Snap panel toggle
+  onToggleGrid?: () => void;     // Grid toggle
+  showGrid?: boolean;            // Grid visibility state
 }
 
 // ============================================
@@ -32,7 +34,9 @@ export const EnhancedToolbar: React.FC<EnhancedToolbarProps> = ({
   onShowBuilding,
   onShowProjectManager,
   onNewProject,
-  onShowSnapPanel
+  onShowSnapPanel,
+  onToggleGrid,
+  showGrid = true
 }) => {
   
   // ============================================
@@ -328,6 +332,24 @@ export const EnhancedToolbar: React.FC<EnhancedToolbarProps> = ({
               <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-white"></span>
             )}
           </button>
+          
+          {/* 🎯 GRID TOGGLE - Izgara aç/kapat */}
+          {onToggleGrid && (
+            <button
+              onClick={onToggleGrid}
+              className={`
+                px-4 py-2 rounded transition-all font-medium
+                ${showGrid
+                  ? 'bg-cyan-500 text-white shadow-md'
+                  : 'bg-cyan-100 text-cyan-700 hover:bg-cyan-200'
+                }
+              `}
+              title="Izgarayı Aç/Kapat (G)"
+            >
+              <span className="text-lg">🎯</span>
+              <span className="ml-2 text-sm">Grid</span>
+            </button>
+          )}
           
           {/* Undo/Redo */}
           <button

@@ -346,10 +346,7 @@ export const useDrawingStore = create<DrawingState>((set, get) => ({
    * Izgarayı aç/kapat
    */
   toggleGrid: () => set((state) => ({
-    snapSettings: {
-      ...state.snapSettings,
-      showGrid: !state.snapSettings.showGrid
-    }
+    showGrid: !state.showGrid
   })),
 
   // ============================================
