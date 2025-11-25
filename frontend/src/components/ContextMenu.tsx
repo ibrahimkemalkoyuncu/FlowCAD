@@ -362,7 +362,7 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
         {/* Submenu */}
         {hasSubmenu && submenuOpen === item.id && (
           <div className="absolute left-full top-0 ml-1 bg-white rounded-lg shadow-xl border border-gray-200 min-w-[180px] py-1 z-50">
-            {item.submenu!.map(subItem => renderMenuItem(subItem, true))}
+            {item.submenu?.map(subItem => renderMenuItem(subItem, true))}
           </div>
         )}
       </div>
