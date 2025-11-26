@@ -2,6 +2,7 @@
 // 1. src/store/useBlueprintStore.ts - Klavuz Store
 // ============================================
 import { create } from 'zustand';
+import type { ParsedDWG } from '../types/dwg';
 
 export interface Blueprint {
   id: string;
@@ -16,6 +17,7 @@ export interface Blueprint {
   opacity: number;
   visible: boolean;
   locked: boolean;
+  dwgData?: ParsedDWG; // DXF/DWG parse edilen veri
 }
 
 interface BlueprintState {

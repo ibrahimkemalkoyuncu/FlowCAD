@@ -3,8 +3,8 @@
 // ============================================
 import React from 'react';
 import * as THREE from 'three';
-import { Line, Text } from '@react-three/drei'; // Circle'ı kaldırdık
-import { useBlueprintStore } from '../store/useBlueprintStore';
+import { Line, Text } from '@react-three/drei';
+import { useBlueprintStore, type Blueprint } from '../store/useBlueprintStore';
 
 export const DWGRenderer: React.FC = () => {
   const { blueprints } = useBlueprintStore();
@@ -12,9 +12,11 @@ export const DWGRenderer: React.FC = () => {
   return (
     <>
       {blueprints
-        .filter(bp => (bp.type === 'dxf' || bp.type === 'dwg') && bp.visible && (bp as any).dwgData)
+        .filter(bp => (bp.type === 'dxf' || bp.type === 'dwg') && bp.visible && bp.dwgData)
         .map(blueprint => {
-          const dwgData = (blueprint as any).dwgData;
+          const dwgData = blueprint.dwgData;
+          if (!dwgData) return null;
+          
           return (
             <group 
               key={blueprint.id}

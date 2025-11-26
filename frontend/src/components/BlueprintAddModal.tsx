@@ -8,7 +8,7 @@ import React, { useState, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Line, Text, Grid } from '@react-three/drei';
 import * as THREE from 'three';
-import { useBlueprintStore } from '../store/useBlueprintStore';
+import { useBlueprintStore, type Blueprint } from '../store/useBlueprintStore';
 import { dwgParser } from '../services/dwgParser';
 import { blueprintApi } from '../services/blueprintApi';
 import toast from 'react-hot-toast';
@@ -295,8 +295,8 @@ export const BlueprintAddModal: React.FC<BlueprintAddModalProps> = ({ onClose })
       const result = await blueprintApi.upload(preview.file);
       const apiUrl = import.meta.env.VITE_API_URL || 'https://localhost:7121';
       
-      // Create blueprint
-      const blueprint: any = {
+      // Create blueprint with proper type
+      const blueprint: Blueprint = {
         id: `blueprint_${Date.now()}`,
         name: preview.fileName,
         type: 'dxf',

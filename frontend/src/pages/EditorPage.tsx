@@ -33,7 +33,7 @@ export const EditorPage: React.FC = () => {
   const [showBlueprints, setShowBlueprints] = useState(false);
   const [showBlueprintAddModal, setShowBlueprintAddModal] = useState(false);
   const [showSnapPanel, setShowSnapPanel] = useState(false);
-  const [showGrid, setShowGrid] = useState(true); // Grid visibility toggle
+  const [showGrid, setShowGrid] = useState(false); // Grid visibility toggle - varsayılan olarak kapalı
   
   // Context menu state - Sağ tıklama menüsü
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
