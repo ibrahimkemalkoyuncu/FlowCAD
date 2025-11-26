@@ -238,11 +238,6 @@ export const EditorPage: React.FC = () => {
           </div>
         )}
 
-        {/* Blueprint Add Modal - Klavuz Ekle penceresi (Issue #7) */}
-        {showBlueprintAddModal && (
-          <BlueprintAddModal onClose={() => setShowBlueprintAddModal(false)} />
-        )}
-
         {/* Keyboard Shortcuts Help */}
         <div className="absolute bottom-4 right-4 bg-white/95 backdrop-blur-md rounded-xl shadow-2xl p-4 text-xs border border-gray-200 z-30 max-w-xs">
           <div className="font-bold text-gray-800 mb-3 text-sm flex items-center gap-2">
@@ -269,6 +264,12 @@ export const EditorPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Blueprint Add Modal - Klavuz Ekle penceresi (Issue #7) */}
+      {/* Moved outside overflow-hidden container for proper fixed positioning */}
+      {showBlueprintAddModal && (
+        <BlueprintAddModal onClose={() => setShowBlueprintAddModal(false)} />
+      )}
     </div>
   );
 };
