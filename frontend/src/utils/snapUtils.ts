@@ -44,6 +44,12 @@ export const defaultSnapSettings: SnapSettings = {
 // SNAP RESULT INTERFACE
 // ============================================
 
+export interface SnapPoint {
+  point: Point3D;
+  type: 'endpoint' | 'midpoint' | 'intersection' | 'center' | 'grid' | 'none';
+  reference: string;
+}
+
 export interface SnapResult {
   snappedPoint: Point3D;
   snapInfo: {
@@ -237,4 +243,37 @@ export function findPipeIntersection(
   }
   
   return null;
+}
+// ============================================
+// SNAP VISUALIZATION HELPERS
+// ============================================
+
+/**
+ * Snap tipi için renk döndürür
+ */
+export function getSnapColor(type: string): string {
+  const colors: Record<string, string> = {
+    endpoint: '#3b82f6',
+    midpoint: '#10b981',
+    intersection: '#f59e0b',
+    center: '#ef4444',
+    grid: '#6b7280',
+    none: '#9ca3af'
+  };
+  return colors[type] || colors.none;
+}
+
+/**
+ * Snap tipi için ikon döndürür
+ */
+export function getSnapIcon(type: string): string {
+  const icons: Record<string, string> = {
+    endpoint: '□',
+    midpoint: '△',
+    intersection: '×',
+    center: '○',
+    grid: '⊞',
+    none: '·'
+  };
+  return icons[type] || icons.none;
 }

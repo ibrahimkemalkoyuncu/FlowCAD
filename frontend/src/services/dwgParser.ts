@@ -3,7 +3,7 @@ import DxfParser from 'dxf-parser';
 import type { DWGEntity, DWGLayer, DWGBlock, ParsedDWG } from '../types/dwg';
 
 class DWGParserService {
-  private parser: DxfParser;
+  private parser: InstanceType<typeof DxfParser>;
 
   constructor() {
     this.parser = new DxfParser();

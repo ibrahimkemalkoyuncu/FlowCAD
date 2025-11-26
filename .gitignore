@@ -9,9 +9,14 @@ bin/
 obj/
 appsettings.Development.json
 
+# Uploaded files (wwwroot/uploads)
+**/wwwroot/uploads/**
+!**/wwwroot/uploads/.gitkeep
+
 # React
 node_modules/
 /build
+dist/
 /.env
 
 # SQL Server

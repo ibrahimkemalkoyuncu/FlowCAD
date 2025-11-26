@@ -13,7 +13,7 @@ export const StoreTest: React.FC = () => {
           mode: store.mode,
           pipes: store.pipes.length,
           components: store.components.length,
-          snapToGrid: store.snapToGrid,
+          snapToGrid: store.snapSettings.snapToGrid,
           currentDiameter: store.currentDiameter
         }, null, 2)}
       </pre>
@@ -25,7 +25,7 @@ export const StoreTest: React.FC = () => {
           Pipe Modu
         </button>
         <button 
-          onClick={() => store.toggleSnapToGrid()}
+          onClick={() => store.toggleSnap('snapToGrid')}
           className="px-2 py-1 bg-green-500 text-white text-xs rounded"
         >
           Grid Toggle

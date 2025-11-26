@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { SceneContent } from '../components/InteractiveScene3D';
-import { EnhancedToolbar } from '../components/EnhancedToolbar';
+import EnhancedToolbar from '../components/EnhancedToolbar';
 import { PropertyPanel } from '../components/PropertyPanel';
-import { BlueprintPanel } from '../components/BlueprintPanel';
-import { MaterialCalculator } from '../components/MaterialCalculator';
+import BlueprintPanel from '../components/BlueprintPanel';
+import MaterialCalculator from '../components/MaterialCalculator';
 import { StoreTest } from '../components/StoreTest';
 
 export const UpdatedEditorPage: React.FC = () => {

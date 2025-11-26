@@ -3,63 +3,127 @@
 // Konum: frontend/src/pages/EditorPage.tsx
 // SNAP sistemi ile geliştirilmiş, tamamen çalışan versiyon
 // React Router navigation düzeltildi
+// Sağ tıklama context menu eklendi
 // ============================================
 
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Canvas } from '@react-three/fiber';
 import { Toaster, toast } from 'react-hot-toast';
 import { SceneContent } from '../components/InteractiveScene3D';
 import EnhancedToolbar from '../components/EnhancedToolbar';
 import BlueprintPanel from '../components/BlueprintPanel';
+import BlueprintAddModal from '../components/BlueprintAddModal';
 import PropertyPanel from '../components/PropertyPanel';
 import MaterialCalculator from '../components/MaterialCalculator';
 import SnapPanel from '../components/SnapPanel';
+import ContextMenu from '../components/ContextMenu';
+import { useBlueprintStore } from '../store/useBlueprintStore';
+import { blueprintApi } from '../services/blueprintApi';
+import { dwgParser } from '../services/dwgParser';
 
 // ============================================
 // EDITOR PAGE COMPONENT
 // ============================================
 
 export const EditorPage: React.FC = () => {
-  const navigate = useNavigate();
+  const { addBlueprint } = useBlueprintStore();
   
   // Panel görünürlük durumları
   const [showMaterials, setShowMaterials] = useState(false);
   const [showBlueprints, setShowBlueprints] = useState(false);
+  const [showBlueprintAddModal, setShowBlueprintAddModal] = useState(false);
   const [showSnapPanel, setShowSnapPanel] = useState(false);
+  const [showGrid, setShowGrid] = useState(false); // Grid visibility toggle - varsayılan olarak kapalı
+  
+  // Context menu state - Sağ tıklama menüsü
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
+  
+  // File input ref for DWG/DXF files
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   // ============================================
   // EVENT HANDLERS
   // ============================================
 
-  // Proje yöneticisi dönüş onayı
-  const handleProjectManagerClick = () => {
-    toast((t) => (
-      <div className="text-center">
-        <p className="font-medium mb-3">Ana sayfaya dönmek istediğinizden emin misiniz?</p>
-        <p className="text-sm text-gray-600 mb-4">Kaydedilmemiş değişiklikler kaybolacak.</p>
-        <div className="flex gap-2 justify-center">
-          <button
-            onClick={() => {
-              navigate('/');
-              toast.dismiss(t.id);
-            }}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium"
-          >
-            Evet, Dön
-          </button>
-          <button
-            onClick={() => toast.dismiss(t.id)}
-            className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors font-medium"
-          >
-            İptal
-          </button>
-        </div>
-      </div>
-    ), {
-      duration: Infinity,
-      style: { background: '#fff', color: '#000', padding: '20px' }
-    });
+  // Sağ tıklama handler - Context menu açar
+  const handleContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setContextMenu({ x: e.clientX, y: e.clientY });
+  };
+
+  // Context menu kapat
+  const handleCloseContextMenu = () => {
+    setContextMenu(null);
+  };
+
+  // Dosya aç - DWG/DXF file picker (AutoCAD style)
+  const handleOpenFile = () => {
+    fileInputRef.current?.click();
+  };
+
+  // DWG/DXF dosyası seçildiğinde
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase();
+    
+    if (fileExtension !== '.dwg' && fileExtension !== '.dxf') {
+      toast.error('Sadece DWG veya DXF dosyaları desteklenir!');
+      return;
+    }
+
+    const loadingToast = toast.loading('DXF dosyası işleniyor...');
+
+    try {
+      // Parse DXF/DWG file content
+      const content = await file.text();
+      let parsedDWG = await dwgParser.parseDWG(content);
+      
+      // Scale (AutoCAD typically uses mm, we use meters - increased for better visibility)
+      const scale = 0.1;
+      parsedDWG = dwgParser.scaleDWG(parsedDWG, scale);
+      
+      // Center the drawing
+      parsedDWG = dwgParser.centerDWG(parsedDWG);
+      
+      // Upload file to server (for storage/backup)
+      const result = await blueprintApi.upload(file);
+      
+      // Get API base URL for constructing full URL
+      const apiUrl = import.meta.env.VITE_API_URL || 'https://localhost:7121';
+      
+      // Create blueprint from parsed data
+      const blueprint: any = {
+        id: `blueprint_${Date.now()}`,
+        name: file.name,
+        type: fileExtension === '.dxf' ? 'dxf' : 'dwg',
+        url: `${apiUrl}${result.url}`,
+        width: parsedDWG.bounds.maxX - parsedDWG.bounds.minX,
+        height: parsedDWG.bounds.maxY - parsedDWG.bounds.minY,
+        scale: 1,
+        position: { x: 0, y: 0.1, z: 0 },
+        rotation: 0,
+        opacity: 1.0,
+        visible: true,
+        locked: false,
+        dwgData: parsedDWG // Attach parsed geometry data
+      };
+      
+      addBlueprint(blueprint);
+      toast.success(`${file.name} yüklendi! ${parsedDWG.entities.length} entity bulundu.`, { id: loadingToast });
+      
+      // Show blueprints panel
+      setShowBlueprints(true);
+      
+    } catch (error) {
+      console.error('File processing error:', error);
+      const errorMsg = error instanceof Error ? error.message : 'Bilinmeyen hata';
+      toast.error(`Dosya işlenirken hata: ${errorMsg}`, { id: loadingToast });
+    }
+    
+    // Reset input
+    e.target.value = '';
   };
 
   // Yeni proje oluşturma onayı
@@ -97,17 +161,41 @@ export const EditorPage: React.FC = () => {
   // ============================================
 
   return (
-    <div className="h-screen flex flex-col bg-gray-100">
+    <div className="h-screen flex flex-col bg-gray-100" onContextMenu={handleContextMenu}>
       {/* Toast Notifications */}
       <Toaster position="top-center" />
+
+      {/* Hidden file input for DWG/DXF */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".dwg,.dxf"
+        style={{ display: 'none' }}
+        onChange={handleFileSelect}
+      />
+
+      {/* Context Menu - Sağ tıklama menüsü */}
+      {contextMenu && (
+        <ContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          onClose={handleCloseContextMenu}
+          onShowBlueprints={() => setShowBlueprints(true)}
+          onShowBlueprintAddModal={() => setShowBlueprintAddModal(true)}
+          onShowMaterials={() => setShowMaterials(true)}
+          onShowSnapPanel={() => setShowSnapPanel(true)}
+        />
+      )}
 
       {/* Toolbar */}
       <EnhancedToolbar
         onShowBlueprints={() => setShowBlueprints(!showBlueprints)}
         onShowMaterials={() => setShowMaterials(!showMaterials)}
-        onShowProjectManager={handleProjectManagerClick}
+        onShowProjectManager={handleOpenFile}
         onNewProject={handleNewProject}
         onShowSnapPanel={() => setShowSnapPanel(!showSnapPanel)}
+        onToggleGrid={() => setShowGrid(!showGrid)}
+        showGrid={showGrid}
       />
 
       {/* Main 3D Canvas Area */}
@@ -117,7 +205,7 @@ export const EditorPage: React.FC = () => {
           shadows
           className="w-full h-full"
         >
-          <SceneContent />
+          <SceneContent showGrid={showGrid} />
         </Canvas>
 
         {/* Property Panel - Sağda */}
@@ -176,6 +264,12 @@ export const EditorPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Blueprint Add Modal - Klavuz Ekle penceresi (Issue #7) */}
+      {/* Moved outside overflow-hidden container for proper fixed positioning */}
+      {showBlueprintAddModal && (
+        <BlueprintAddModal onClose={() => setShowBlueprintAddModal(false)} />
+      )}
     </div>
   );
 };

@@ -25,11 +25,11 @@ export const ComponentPlacer: React.FC = () => {
     raycaster.ray.intersectPlane(groundPlane, intersectPoint);
     
     if (intersectPoint) {
-      const { snapToGrid, gridSize } = useDrawingStore.getState();
-      if (snapToGrid) {
-        intersectPoint.x = Math.round(intersectPoint.x / gridSize) * gridSize;
-        intersectPoint.y = Math.round(intersectPoint.y / gridSize) * gridSize;
-        intersectPoint.z = Math.round(intersectPoint.z / gridSize) * gridSize;
+      const { snapSettings } = useDrawingStore.getState();
+      if (snapSettings.snapToGrid) {
+        intersectPoint.x = Math.round(intersectPoint.x / snapSettings.gridSize) * snapSettings.gridSize;
+        intersectPoint.y = Math.round(intersectPoint.y / snapSettings.gridSize) * snapSettings.gridSize;
+        intersectPoint.z = Math.round(intersectPoint.z / snapSettings.gridSize) * snapSettings.gridSize;
       }
       setPreviewPos({ x: intersectPoint.x, y: intersectPoint.y, z: intersectPoint.z });
     }
