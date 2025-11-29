@@ -15,6 +15,7 @@ import BlueprintPanel from '../components/BlueprintPanel';
 import PropertyPanel from '../components/PropertyPanel';
 import MaterialCalculator from '../components/MaterialCalculator';
 import SnapPanel from '../components/SnapPanel';
+import { DWGUploader } from '../components/DWGUploader';
 
 // ============================================
 // EDITOR PAGE COMPONENT
@@ -27,6 +28,7 @@ export const EditorPage: React.FC = () => {
   const [showMaterials, setShowMaterials] = useState(false);
   const [showBlueprints, setShowBlueprints] = useState(false);
   const [showSnapPanel, setShowSnapPanel] = useState(false);
+  const [showDWGUploader, setShowDWGUploader] = useState(false);
 
   // ============================================
   // EVENT HANDLERS
@@ -108,6 +110,7 @@ export const EditorPage: React.FC = () => {
         onShowProjectManager={handleProjectManagerClick}
         onNewProject={handleNewProject}
         onShowSnapPanel={() => setShowSnapPanel(!showSnapPanel)}
+        onOpenDXF={() => setShowDWGUploader(true)}
       />
 
       {/* Main 3D Canvas Area */}
@@ -148,6 +151,11 @@ export const EditorPage: React.FC = () => {
               <MaterialCalculator onClose={() => setShowMaterials(false)} />
             </div>
           </div>
+        )}
+
+        {/* DWG Uploader - Modal */}
+        {showDWGUploader && (
+          <DWGUploader onClose={() => setShowDWGUploader(false)} />
         )}
 
         {/* Keyboard Shortcuts Help */}

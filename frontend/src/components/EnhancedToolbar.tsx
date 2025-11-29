@@ -20,6 +20,7 @@ interface EnhancedToolbarProps {
   onShowProjectManager?: () => void;
   onNewProject?: () => void;
   onShowSnapPanel?: () => void;  // 🎯 YENİ: Snap panel toggle
+  onOpenDXF?: () => void;  // 🎯 YENİ: DXF dosyası açma
 }
 
 // ============================================
@@ -32,7 +33,8 @@ export const EnhancedToolbar: React.FC<EnhancedToolbarProps> = ({
   onShowBuilding,
   onShowProjectManager,
   onNewProject,
-  onShowSnapPanel
+  onShowSnapPanel,
+  onOpenDXF
 }) => {
   
   // ============================================
@@ -96,7 +98,7 @@ export const EnhancedToolbar: React.FC<EnhancedToolbarProps> = ({
           if (onShowProjectManager) onShowProjectManager();
         } else if (e.key === 'o') {
           e.preventDefault();
-          if (onShowProjectManager) onShowProjectManager();
+          if (onOpenDXF) onOpenDXF();
         } else if (e.key === 'n') {
           e.preventDefault();
           if (onNewProject) onNewProject();
@@ -143,7 +145,7 @@ export const EnhancedToolbar: React.FC<EnhancedToolbarProps> = ({
     
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [undo, redo, setMode, toggleSnap, clearTempPoints, isSnapPanelOpen, onShowSnapPanel, onShowProjectManager, onNewProject]);
+  }, [undo, redo, setMode, toggleSnap, clearTempPoints, isSnapPanelOpen, onShowSnapPanel, onShowProjectManager, onNewProject, onOpenDXF]);
   
   // ============================================
   // EVENT HANDLERS
@@ -187,7 +189,7 @@ export const EnhancedToolbar: React.FC<EnhancedToolbarProps> = ({
             SOL - Dosya İşlemleri
             ============================================ */}
         
-        {(onNewProject || onShowProjectManager) && (
+        {(onNewProject || onShowProjectManager || onOpenDXF) && (
           <div className="flex gap-2">
             {onNewProject && (
               <button
@@ -199,24 +201,24 @@ export const EnhancedToolbar: React.FC<EnhancedToolbarProps> = ({
               </button>
             )}
             
+            {onOpenDXF && (
+              <button
+                onClick={onOpenDXF}
+                className="px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded transition-colors text-sm font-medium"
+                title="DXF Dosyası Aç (Ctrl+O)"
+              >
+                📂 Aç
+              </button>
+            )}
+            
             {onShowProjectManager && (
-              <>
-                <button
-                  onClick={onShowProjectManager}
-                  className="px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded transition-colors text-sm font-medium"
-                  title="Proje Aç (Ctrl+O)"
-                >
-                  📂 Aç
-                </button>
-                
-                <button
-                  onClick={onShowProjectManager}
-                  className="px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded transition-colors text-sm font-medium"
-                  title="Kaydet (Ctrl+S)"
-                >
-                  💾 Kaydet
-                </button>
-              </>
+              <button
+                onClick={onShowProjectManager}
+                className="px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded transition-colors text-sm font-medium"
+                title="Kaydet (Ctrl+S)"
+              >
+                💾 Kaydet
+              </button>
             )}
           </div>
         )}
