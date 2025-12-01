@@ -3,9 +3,10 @@
 // Konum: frontend/src/pages/EditorPage.tsx
 // SNAP sistemi ile geliştirilmiş, tamamen çalışan versiyon
 // React Router navigation düzeltildi
+// AutoCAD benzeri özellikler eklendi
 // ============================================
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Canvas } from '@react-three/fiber';
 import { Toaster, toast } from 'react-hot-toast';
@@ -16,6 +17,9 @@ import PropertyPanel from '../components/PropertyPanel';
 import MaterialCalculator from '../components/MaterialCalculator';
 import SnapPanel from '../components/SnapPanel';
 import { DWGUploader } from '../components/DWGUploader';
+import CommandLine from '../components/CommandLine';
+import CoordinateDisplay from '../components/CoordinateDisplay';
+import LayerManager from '../components/LayerManager';
 
 // ============================================
 // EDITOR PAGE COMPONENT
@@ -23,12 +27,16 @@ import { DWGUploader } from '../components/DWGUploader';
 
 export const EditorPage: React.FC = () => {
   const navigate = useNavigate();
+  const canvasContainerRef = useRef<HTMLDivElement>(null);
   
   // Panel görünürlük durumları
   const [showMaterials, setShowMaterials] = useState(false);
   const [showBlueprints, setShowBlueprints] = useState(false);
   const [showSnapPanel, setShowSnapPanel] = useState(false);
   const [showDWGUploader, setShowDWGUploader] = useState(false);
+  const [showLayerManager, setShowLayerManager] = useState(false);
+  const [showCommandLine, setShowCommandLine] = useState(true);
+  const [showCoordinates, setShowCoordinates] = useState(true);
 
   // ============================================
   // EVENT HANDLERS
@@ -113,8 +121,45 @@ export const EditorPage: React.FC = () => {
         onOpenDXF={() => setShowDWGUploader(true)}
       />
 
+      {/* Secondary Toolbar - AutoCAD Style */}
+      <div className="bg-gray-800 border-b border-gray-700 px-3 py-1.5 flex items-center gap-2">
+        <button
+          onClick={() => setShowLayerManager(true)}
+          className="px-3 py-1.5 bg-gray-700 text-gray-200 rounded hover:bg-gray-600 transition-colors text-sm flex items-center gap-2"
+          title="Katman Yöneticisi"
+        >
+          <span>📑</span>
+          <span className="hidden sm:inline">Katmanlar</span>
+        </button>
+        <div className="h-5 w-px bg-gray-600" />
+        <button
+          onClick={() => setShowCoordinates(!showCoordinates)}
+          className={`px-3 py-1.5 rounded transition-colors text-sm flex items-center gap-2 ${
+            showCoordinates ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-200 hover:bg-gray-600'
+          }`}
+          title="Koordinat Göstergesi"
+        >
+          <span>📍</span>
+          <span className="hidden sm:inline">Koordinatlar</span>
+        </button>
+        <button
+          onClick={() => setShowCommandLine(!showCommandLine)}
+          className={`px-3 py-1.5 rounded transition-colors text-sm flex items-center gap-2 ${
+            showCommandLine ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-200 hover:bg-gray-600'
+          }`}
+          title="Komut Satırı"
+        >
+          <span>⌨️</span>
+          <span className="hidden sm:inline">Komut Satırı</span>
+        </button>
+        <div className="flex-1" />
+        <div className="text-xs text-gray-400 hidden md:block">
+          FlowCAD v1.0 | AutoCAD Uyumlu
+        </div>
+      </div>
+
       {/* Main 3D Canvas Area */}
-      <div className="flex-1 relative overflow-hidden">
+      <div ref={canvasContainerRef} className={`flex-1 relative overflow-hidden ${showCommandLine ? 'pb-48' : ''}`}>
         <Canvas
           camera={{ position: [10, 10, 10], fov: 50 }}
           shadows
@@ -122,6 +167,11 @@ export const EditorPage: React.FC = () => {
         >
           <SceneContent />
         </Canvas>
+
+        {/* Coordinate Display - Sol Alt */}
+        {showCoordinates && (
+          <CoordinateDisplay containerRef={canvasContainerRef} />
+        )}
 
         {/* Property Panel - Sağda */}
         <div className="absolute top-0 right-0 h-full">
@@ -137,7 +187,7 @@ export const EditorPage: React.FC = () => {
 
         {/* Blueprint Panel - Modal */}
         {showBlueprints && (
-          <div className="absolute inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-40">
+          <div className="absolute inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-40 p-4">
             <div className="w-full max-w-4xl max-h-[90vh] overflow-hidden">
               <BlueprintPanel onClose={() => setShowBlueprints(false)} />
             </div>
@@ -146,10 +196,17 @@ export const EditorPage: React.FC = () => {
 
         {/* Material Calculator - Modal */}
         {showMaterials && (
-          <div className="absolute inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-40">
+          <div className="absolute inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-40 p-4">
             <div className="w-full max-w-5xl max-h-[90vh] overflow-hidden">
               <MaterialCalculator onClose={() => setShowMaterials(false)} />
             </div>
+          </div>
+        )}
+
+        {/* Layer Manager - Modal */}
+        {showLayerManager && (
+          <div className="absolute inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-40 p-4">
+            <LayerManager onClose={() => setShowLayerManager(false)} />
           </div>
         )}
 
@@ -158,7 +215,7 @@ export const EditorPage: React.FC = () => {
           <DWGUploader onClose={() => setShowDWGUploader(false)} />
         )}
 
-        {/* Keyboard Shortcuts Help */}
+        {/* Keyboard Shortcuts Help - Updated */}
         <div className="absolute bottom-4 right-4 bg-white/95 backdrop-blur-md rounded-xl shadow-2xl p-4 text-xs border border-gray-200 z-30 max-w-xs">
           <div className="font-bold text-gray-800 mb-3 text-sm flex items-center gap-2">
             <span className="text-lg">⌨️</span>
@@ -166,24 +223,41 @@ export const EditorPage: React.FC = () => {
           </div>
           <div className="space-y-1.5 text-gray-700">
             <div className="flex items-center gap-2">
-              <kbd className="px-2 py-1 bg-gray-100 rounded border text-xs">V</kbd>
-              <span>Seçim</span>
+              <kbd className="px-2 py-1 bg-gray-100 rounded border text-xs">L</kbd>
+              <span>Boru (Line)</span>
             </div>
             <div className="flex items-center gap-2">
-              <kbd className="px-2 py-1 bg-gray-100 rounded border text-xs">P</kbd>
-              <span>Boru</span>
+              <kbd className="px-2 py-1 bg-gray-100 rounded border text-xs">V</kbd>
+              <span>Vana</span>
             </div>
             <div className="flex items-center gap-2">
               <kbd className="px-2 py-1 bg-orange-50 rounded border text-xs">S</kbd>
               <span>Snap Panel</span>
             </div>
             <div className="flex items-center gap-2">
+              <kbd className="px-2 py-1 bg-gray-100 rounded border text-xs">U</kbd>
+              <span>Geri Al (Undo)</span>
+            </div>
+            <div className="flex items-center gap-2">
               <kbd className="px-2 py-1 bg-gray-100 rounded border text-xs">Esc</kbd>
               <span>İptal</span>
             </div>
           </div>
+          <div className="mt-3 pt-2 border-t border-gray-200 text-gray-500">
+            💡 Komut satırına "HELP" yazın
+          </div>
         </div>
       </div>
+
+      {/* Command Line - AutoCAD Style */}
+      {showCommandLine && (
+        <CommandLine
+          onOpenDXF={() => setShowDWGUploader(true)}
+          onShowMaterials={() => setShowMaterials(true)}
+          onShowBlueprints={() => setShowBlueprints(true)}
+          onNewProject={handleNewProject}
+        />
+      )}
     </div>
   );
 };
