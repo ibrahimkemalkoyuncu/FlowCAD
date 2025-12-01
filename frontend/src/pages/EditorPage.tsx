@@ -4,6 +4,7 @@
 // SNAP sistemi ile geliştirilmiş, tamamen çalışan versiyon
 // React Router navigation düzeltildi
 // AutoCAD benzeri özellikler eklendi
+// DXF Entity düzenleme desteği eklendi
 // ============================================
 
 import React, { useState, useRef } from 'react';
@@ -20,6 +21,7 @@ import { DWGUploader } from '../components/DWGUploader';
 import CommandLine from '../components/CommandLine';
 import CoordinateDisplay from '../components/CoordinateDisplay';
 import LayerManager from '../components/LayerManager';
+import DXFEntityEditor from '../components/DXFEntityEditor';
 
 // ============================================
 // EDITOR PAGE COMPONENT
@@ -37,6 +39,7 @@ export const EditorPage: React.FC = () => {
   const [showLayerManager, setShowLayerManager] = useState(false);
   const [showCommandLine, setShowCommandLine] = useState(true);
   const [showCoordinates, setShowCoordinates] = useState(true);
+  const [showDXFEditor, setShowDXFEditor] = useState(false);
 
   // ============================================
   // EVENT HANDLERS
@@ -131,6 +134,14 @@ export const EditorPage: React.FC = () => {
           <span>📑</span>
           <span className="hidden sm:inline">Katmanlar</span>
         </button>
+        <button
+          onClick={() => setShowDXFEditor(true)}
+          className="px-3 py-1.5 bg-gray-700 text-gray-200 rounded hover:bg-gray-600 transition-colors text-sm flex items-center gap-2"
+          title="DXF Entity Düzenleyici"
+        >
+          <span>✏️</span>
+          <span className="hidden sm:inline">DXF Düzenle</span>
+        </button>
         <div className="h-5 w-px bg-gray-600" />
         <button
           onClick={() => setShowCoordinates(!showCoordinates)}
@@ -207,6 +218,13 @@ export const EditorPage: React.FC = () => {
         {showLayerManager && (
           <div className="absolute inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-40 p-4">
             <LayerManager onClose={() => setShowLayerManager(false)} />
+          </div>
+        )}
+
+        {/* DXF Entity Editor - Modal */}
+        {showDXFEditor && (
+          <div className="absolute inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-40 p-4">
+            <DXFEntityEditor onClose={() => setShowDXFEditor(false)} />
           </div>
         )}
 
