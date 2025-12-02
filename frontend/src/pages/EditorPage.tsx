@@ -8,7 +8,7 @@
 // Proje kaydetme/yükleme ve DXF dışa aktarma eklendi
 // ============================================
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Toaster, toast } from 'react-hot-toast';
 import { SceneContent } from '../components/InteractiveScene3D';
@@ -23,6 +23,9 @@ import CoordinateDisplay from '../components/CoordinateDisplay';
 import LayerManager from '../components/LayerManager';
 import DXFEntityEditor from '../components/DXFEntityEditor';
 import ProjectSaveDialog from '../components/ProjectSaveDialog';
+import MeasureTool from '../components/MeasureTool';
+import UndoRedoPanel from '../components/UndoRedoPanel';
+import { useDrawingStore } from '../store/useDrawingStore';
 import type { ParsedDWG } from '../types/dwg';
 
 // ============================================
@@ -31,6 +34,9 @@ import type { ParsedDWG } from '../types/dwg';
 
 export const EditorPage: React.FC = () => {
   const canvasContainerRef = useRef<HTMLDivElement>(null);
+  
+  // Zustand store
+  const { undo, redo, history, historyIndex } = useDrawingStore();
   
   // Panel görünürlük durumları
   const [showMaterials, setShowMaterials] = useState(false);
@@ -42,8 +48,54 @@ export const EditorPage: React.FC = () => {
   const [showCoordinates, setShowCoordinates] = useState(true);
   const [showDXFEditor, setShowDXFEditor] = useState(false);
   const [showProjectDialog, setShowProjectDialog] = useState(false);
+  const [showMeasureTool, setShowMeasureTool] = useState(false);
+  const [showUndoRedoPanel, setShowUndoRedoPanel] = useState(false);
   const [projectDialogMode, setProjectDialogMode] = useState<'save' | 'load' | 'export'>('save');
   const [currentDXFData, setCurrentDXFData] = useState<ParsedDWG | undefined>(undefined);
+
+  // ============================================
+  // KEYBOARD SHORTCUTS - Undo/Redo
+  // ============================================
+  
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    // Ctrl+Z - Undo
+    if (e.ctrlKey && e.key === 'z' && !e.shiftKey) {
+      e.preventDefault();
+      if (historyIndex >= 0) {
+        undo();
+        toast.success('Geri alındı', { duration: 1500, icon: '↩️' });
+      } else {
+        toast.error('Geri alınacak işlem yok', { duration: 1500 });
+      }
+    }
+    
+    // Ctrl+Y or Ctrl+Shift+Z - Redo
+    if ((e.ctrlKey && e.key === 'y') || (e.ctrlKey && e.shiftKey && e.key === 'z')) {
+      e.preventDefault();
+      if (historyIndex < history.length - 1) {
+        redo();
+        toast.success('Yinelendi', { duration: 1500, icon: '↪️' });
+      } else {
+        toast.error('Yinelenecek işlem yok', { duration: 1500 });
+      }
+    }
+    
+    // M - Measure Tool
+    if (e.key === 'm' || e.key === 'M') {
+      if (!e.ctrlKey && !e.altKey && !e.shiftKey) {
+        // Ignore if typing in an input
+        if (document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA') {
+          return;
+        }
+        setShowMeasureTool(prev => !prev);
+      }
+    }
+  }, [undo, redo, historyIndex, history.length]);
+
+  useEffect(() => {
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleKeyDown]);
 
   // ============================================
   // EVENT HANDLERS
@@ -163,6 +215,64 @@ export const EditorPage: React.FC = () => {
           <span className="hidden sm:inline">Proje Yükle</span>
         </button>
         <div className="h-5 w-px bg-gray-600" />
+        {/* Undo/Redo Buttons */}
+        <button
+          onClick={() => {
+            if (historyIndex >= 0) {
+              undo();
+              toast.success('Geri alındı', { duration: 1500, icon: '↩️' });
+            } else {
+              toast.error('Geri alınacak işlem yok', { duration: 1500 });
+            }
+          }}
+          className={`px-3 py-1.5 rounded transition-colors text-sm flex items-center gap-2 ${
+            historyIndex >= 0 ? 'bg-indigo-700 text-gray-200 hover:bg-indigo-600' : 'bg-gray-700 text-gray-400 cursor-not-allowed'
+          }`}
+          title="Geri Al (Ctrl+Z)"
+          disabled={historyIndex < 0}
+        >
+          <span>↩️</span>
+          <span className="hidden sm:inline">Geri Al</span>
+        </button>
+        <button
+          onClick={() => {
+            if (historyIndex < history.length - 1) {
+              redo();
+              toast.success('Yinelendi', { duration: 1500, icon: '↪️' });
+            } else {
+              toast.error('Yinelenecek işlem yok', { duration: 1500 });
+            }
+          }}
+          className={`px-3 py-1.5 rounded transition-colors text-sm flex items-center gap-2 ${
+            historyIndex < history.length - 1 ? 'bg-purple-700 text-gray-200 hover:bg-purple-600' : 'bg-gray-700 text-gray-400 cursor-not-allowed'
+          }`}
+          title="Yinele (Ctrl+Y)"
+          disabled={historyIndex >= history.length - 1}
+        >
+          <span>↪️</span>
+          <span className="hidden sm:inline">Yinele</span>
+        </button>
+        <button
+          onClick={() => setShowUndoRedoPanel(true)}
+          className="px-3 py-1.5 bg-gray-700 text-gray-200 rounded hover:bg-gray-600 transition-colors text-sm flex items-center gap-2"
+          title="İşlem Geçmişi"
+        >
+          <span>📜</span>
+          <span className="hidden sm:inline">Geçmiş</span>
+        </button>
+        <div className="h-5 w-px bg-gray-600" />
+        {/* Measure Tool Button */}
+        <button
+          onClick={() => setShowMeasureTool(!showMeasureTool)}
+          className={`px-3 py-1.5 rounded transition-colors text-sm flex items-center gap-2 ${
+            showMeasureTool ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-200 hover:bg-gray-600'
+          }`}
+          title="Ölçü Aracı (M)"
+        >
+          <span>📏</span>
+          <span className="hidden sm:inline">Ölçü</span>
+        </button>
+        <div className="h-5 w-px bg-gray-600" />
         <button
           onClick={() => setShowCoordinates(!showCoordinates)}
           className={`px-3 py-1.5 rounded transition-colors text-sm flex items-center gap-2 ${
@@ -262,6 +372,23 @@ export const EditorPage: React.FC = () => {
           />
         )}
 
+        {/* Measure Tool - Modal */}
+        {showMeasureTool && (
+          <div className="absolute inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-40 p-4">
+            <MeasureTool 
+              onClose={() => setShowMeasureTool(false)} 
+              containerRef={canvasContainerRef}
+            />
+          </div>
+        )}
+
+        {/* Undo/Redo Panel - Modal */}
+        {showUndoRedoPanel && (
+          <div className="absolute inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-40 p-4">
+            <UndoRedoPanel onClose={() => setShowUndoRedoPanel(false)} />
+          </div>
+        )}
+
         {/* Keyboard Shortcuts Help - Updated */}
         <div className="absolute bottom-4 right-4 bg-white/95 backdrop-blur-md rounded-xl shadow-2xl p-4 text-xs border border-gray-200 z-30 max-w-xs">
           <div className="font-bold text-gray-800 mb-3 text-sm flex items-center gap-2">
@@ -278,6 +405,18 @@ export const EditorPage: React.FC = () => {
               <span>DXF Aç</span>
             </div>
             <div className="flex items-center gap-2">
+              <kbd className="px-2 py-1 bg-indigo-50 rounded border text-xs">Ctrl+Z</kbd>
+              <span>Geri Al</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <kbd className="px-2 py-1 bg-purple-50 rounded border text-xs">Ctrl+Y</kbd>
+              <span>Yinele</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <kbd className="px-2 py-1 bg-blue-50 rounded border text-xs">M</kbd>
+              <span>Ölçü Aracı</span>
+            </div>
+            <div className="flex items-center gap-2">
               <kbd className="px-2 py-1 bg-gray-100 rounded border text-xs">L</kbd>
               <span>Boru (Line)</span>
             </div>
@@ -288,10 +427,6 @@ export const EditorPage: React.FC = () => {
             <div className="flex items-center gap-2">
               <kbd className="px-2 py-1 bg-orange-50 rounded border text-xs">S</kbd>
               <span>Snap Panel</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <kbd className="px-2 py-1 bg-gray-100 rounded border text-xs">Ctrl+Z</kbd>
-              <span>Geri Al</span>
             </div>
             <div className="flex items-center gap-2">
               <kbd className="px-2 py-1 bg-gray-100 rounded border text-xs">Esc</kbd>
@@ -313,6 +448,8 @@ export const EditorPage: React.FC = () => {
           onNewProject={handleNewProject}
           onSaveProject={handleProjectManagerClick}
           onExportDXF={handleExportDXF}
+          onShowMeasureTool={() => setShowMeasureTool(true)}
+          onShowUndoRedoPanel={() => setShowUndoRedoPanel(true)}
         />
       )}
     </div>

@@ -19,6 +19,8 @@ interface CommandLineProps {
   onNewProject?: () => void;
   onSaveProject?: () => void;
   onExportDXF?: () => void;
+  onShowMeasureTool?: () => void;
+  onShowUndoRedoPanel?: () => void;
 }
 
 interface CommandHistory {
@@ -36,8 +38,9 @@ const COMMANDS: Record<string, { description: string; aliases: string[] }> = {
   LINE: { description: 'Boru çizimi başlat', aliases: ['L', 'BORU', 'PIPE'] },
   SELECT: { description: 'Seçim modu', aliases: ['S', 'SEC', 'SEÇ'] },
   DELETE: { description: 'Seçili nesneyi sil', aliases: ['D', 'DEL', 'SIL', 'ERASE', 'E'] },
-  UNDO: { description: 'Son işlemi geri al', aliases: ['U', 'GERI'] },
-  REDO: { description: 'Geri alınan işlemi yinele', aliases: ['R', 'ILERI'] },
+  UNDO: { description: 'Son işlemi geri al', aliases: ['U', 'GERI', 'GERIALINDI'] },
+  REDO: { description: 'Geri alınan işlemi yinele', aliases: ['R', 'ILERI', 'YINELE'] },
+  MEASURE: { description: 'Ölçü aracını aç', aliases: ['ME', 'OLCU', 'ÖLÇÜ', 'MEASURETOOL'] },
   ZOOM: { description: 'Yakınlaştır/Uzaklaştır', aliases: ['Z'] },
   PAN: { description: 'Görünümü kaydır', aliases: ['P'] },
   SNAP: { description: 'Snap ayarlarını aç/kapat', aliases: ['SN', 'YAKALAMA'] },
@@ -52,7 +55,7 @@ const COMMANDS: Record<string, { description: string; aliases: string[] }> = {
   CLEAR: { description: 'Tüm çizimleri temizle', aliases: ['CL', 'TEMIZLE'] },
   HELP: { description: 'Komut yardımı', aliases: ['?', 'H', 'YARDIM'] },
   VALVE: { description: 'Vana ekle', aliases: ['V', 'VA', 'VANA'] },
-  METER: { description: 'Sayaç ekle', aliases: ['ME', 'SAYAC'] },
+  METER: { description: 'Sayaç ekle', aliases: ['SAYAC'] },
   BOILER: { description: 'Kombi ekle', aliases: ['BO', 'KOMBI'] },
   DIAMETER: { description: 'Boru çapı ayarla', aliases: ['DI', 'CAP', 'ÇAP'] },
   LIST: { description: 'Nesneleri listele', aliases: ['LS', 'LISTE'] },
@@ -75,7 +78,9 @@ export const CommandLine: React.FC<CommandLineProps> = ({
   onShowBlueprints,
   onNewProject,
   onSaveProject,
-  onExportDXF
+  onExportDXF,
+  onShowMeasureTool,
+  onShowUndoRedoPanel
 }) => {
   const [input, setInput] = useState('');
   const [history, setHistory] = useState<CommandHistory[]>([]);
@@ -181,11 +186,26 @@ export const CommandLine: React.FC<CommandLineProps> = ({
       case 'UNDO':
         undo();
         addToHistory('↶ Son işlem geri alındı.', 'success');
+        toast.success('Geri alındı', { icon: '↩️' });
+        if (onShowUndoRedoPanel) {
+          // Optional: show panel
+        }
         break;
 
       case 'REDO':
         redo();
         addToHistory('↷ İşlem yinelendi.', 'success');
+        toast.success('Yinelendi', { icon: '↪️' });
+        break;
+
+      case 'MEASURE':
+        if (onShowMeasureTool) {
+          onShowMeasureTool();
+          addToHistory('📏 Ölçü aracı açıldı.', 'success');
+          toast.success('Ölçü aracı açıldı', { icon: '📏' });
+        } else {
+          addToHistory('📏 Ölçü aracı için M tuşuna basın.', 'info');
+        }
         break;
 
       case 'SNAP':
