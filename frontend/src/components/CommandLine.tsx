@@ -17,6 +17,8 @@ interface CommandLineProps {
   onShowMaterials?: () => void;
   onShowBlueprints?: () => void;
   onNewProject?: () => void;
+  onSaveProject?: () => void;
+  onExportDXF?: () => void;
 }
 
 interface CommandHistory {
@@ -71,7 +73,9 @@ export const CommandLine: React.FC<CommandLineProps> = ({
   onOpenDXF,
   onShowMaterials,
   onShowBlueprints,
-  onNewProject
+  onNewProject,
+  onSaveProject,
+  onExportDXF
 }) => {
   const [input, setInput] = useState('');
   const [history, setHistory] = useState<CommandHistory[]>([]);
@@ -276,6 +280,20 @@ export const CommandLine: React.FC<CommandLineProps> = ({
         addToHistory('🔄 Görünüm yenilendi.', 'success');
         break;
 
+      case 'SAVE':
+        if (onSaveProject) {
+          onSaveProject();
+          addToHistory('💾 Proje kaydetme iletişim kutusu açılıyor...', 'info');
+        }
+        break;
+
+      case 'EXPORT':
+        if (onExportDXF) {
+          onExportDXF();
+          addToHistory('📤 Dışa aktarma iletişim kutusu açılıyor...', 'info');
+        }
+        break;
+
       case 'HELP':
         addToHistory('═══════════════════════════════════════', 'info');
         addToHistory('📖 FLOWCAD KOMUT REHBERİ', 'info');
@@ -301,6 +319,8 @@ export const CommandLine: React.FC<CommandLineProps> = ({
         addToHistory('📁 DOSYA KOMUTLARI:', 'info');
         addToHistory('  NEW (N)      - Yeni proje', 'info');
         addToHistory('  OPEN         - Dosya aç', 'info');
+        addToHistory('  SAVE         - Proje kaydet', 'info');
+        addToHistory('  EXPORT       - DXF dışa aktar', 'info');
         addToHistory('  MATERIALS    - Malzeme listesi', 'info');
         addToHistory('', 'info');
         addToHistory('💡 İpucu: TAB ile otomatik tamamlama', 'info');
@@ -319,7 +339,7 @@ export const CommandLine: React.FC<CommandLineProps> = ({
         }
     }
   }, [setMode, clearTempPoints, undo, redo, toggleSnap, snapSettings, clearAll, 
-      onNewProject, onOpenDXF, onShowMaterials, onShowBlueprints, 
+      onNewProject, onOpenDXF, onShowMaterials, onShowBlueprints, onSaveProject, onExportDXF,
       currentDiameter, setCurrentDiameter, pipes, components, addToHistory]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
