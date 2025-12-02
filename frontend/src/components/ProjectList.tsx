@@ -1,8 +1,7 @@
 // ============================================
 // PROJECT LIST - Proje Listesi Bileşeni
 // Konum: frontend/src/components/ProjectList.tsx
-// Kullanıcının projelerini listeler
-// Responsive ve Mobil Uyumlu Tasarım
+// Apple-Inspired Minimal Design
 // ============================================
 
 import React, { useEffect, useState } from 'react';
@@ -27,7 +26,6 @@ export const ProjectList: React.FC<ProjectListProps> = ({ onSelect }) => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // ============================================
   // LIFECYCLE - Component Mount
@@ -50,7 +48,6 @@ export const ProjectList: React.FC<ProjectListProps> = ({ onSelect }) => {
     } catch (err) {
       console.error('Failed to load projects:', err);
       setError('Projeler yüklenirken bir hata oluştu.');
-      // API yoksa bile devam et
       setProjects([]);
     } finally {
       setLoading(false);
@@ -78,264 +75,190 @@ export const ProjectList: React.FC<ProjectListProps> = ({ onSelect }) => {
   };
 
   // ============================================
-  // RENDER - Loading State
+  // RENDER - Loading State (Apple Style)
   // ============================================
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-[#fafafa] flex items-center justify-center">
         <div className="text-center">
-          <div className="relative">
-            <div className="animate-spin rounded-full h-16 w-16 sm:h-20 sm:w-20 border-4 border-blue-200 border-t-blue-600 mx-auto"></div>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-2xl sm:text-3xl">🔧</span>
-            </div>
-          </div>
-          <p className="mt-6 text-gray-600 font-medium text-sm sm:text-base">Yükleniyor...</p>
+          <div className="w-12 h-12 border-2 border-gray-200 border-t-[#0071e3] rounded-full animate-spin mx-auto"></div>
+          <p className="mt-6 text-[#86868b] text-[15px] font-medium">Yükleniyor...</p>
         </div>
       </div>
     );
   }
 
   // ============================================
-  // RENDER - Main UI
+  // RENDER - Main UI (Apple Style)
   // ============================================
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 overflow-x-hidden">
+    <div className="min-h-screen bg-[#fafafa]">
       
       {/* ============================================
-          HEADER - Responsive Navigation
+          HEADER - Apple-Style Navigation
           ============================================ */}
-      <header className="bg-white/80 backdrop-blur-md shadow-sm border-b border-gray-100 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16 sm:h-20">
+      <header className="bg-white/80 backdrop-blur-xl border-b border-black/5 sticky top-0 z-50">
+        <div className="max-w-5xl mx-auto px-6">
+          <div className="flex items-center justify-between h-14">
             
-            {/* Logo & Title */}
+            {/* Logo */}
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
-                <span className="text-white text-lg sm:text-xl font-bold">FC</span>
-              </div>
-              <div>
-                <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                  FlowCAD
-                </h1>
-                <p className="text-xs sm:text-sm text-gray-500 hidden sm:block">
-                  Profesyonel Tesisat Çizim Uygulaması
-                </p>
-              </div>
+              <span className="text-[24px] font-semibold tracking-tight text-[#1d1d1f]">
+                FlowCAD
+              </span>
             </div>
 
-            {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center gap-4">
-              <button
-                onClick={handleNewProject}
-                className="px-5 py-2.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl hover:from-blue-600 hover:to-indigo-700 transition-all font-medium shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 flex items-center gap-2"
-              >
-                <span className="text-lg">➕</span>
-                <span>Yeni Proje</span>
-              </button>
-            </div>
-
-            {/* Mobile Menu Button */}
-            <button 
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
-              aria-label={mobileMenuOpen ? 'Menüyü kapat' : 'Menüyü aç'}
-              aria-expanded={mobileMenuOpen}
-              aria-controls="mobile-menu"
+            {/* Action Button */}
+            <button
+              onClick={handleNewProject}
+              className="px-5 py-2 bg-[#0071e3] text-white text-[14px] font-medium rounded-full hover:bg-[#0077ed] transition-all duration-200"
             >
-              <span className="text-2xl" aria-hidden="true">{mobileMenuOpen ? '✕' : '☰'}</span>
+              Yeni Proje
             </button>
           </div>
-
-          {/* Mobile Menu */}
-          {mobileMenuOpen && (
-            <div 
-              id="mobile-menu"
-              className="md:hidden py-4 border-t border-gray-100 animate-in slide-in-from-top duration-200"
-            >
-              <button
-                onClick={() => {
-                  handleNewProject();
-                  setMobileMenuOpen(false);
-                }}
-                className="w-full px-4 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl font-medium shadow-lg flex items-center justify-center gap-2"
-              >
-                <span className="text-lg" aria-hidden="true">➕</span>
-                <span>Yeni Proje Oluştur</span>
-              </button>
-            </div>
-          )}
         </div>
       </header>
 
       {/* ============================================
-          HERO SECTION - Welcome Banner
+          HERO - Minimal Welcome
           ============================================ */}
-      <section className="relative overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16">
-          <div className="text-center">
-            {/* Decorative Elements */}
-            <div className="absolute top-0 left-1/4 w-72 h-72 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse"></div>
-            <div className="absolute top-0 right-1/4 w-72 h-72 bg-indigo-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse delay-1000"></div>
-            
-            <div className="relative">
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">
-                Hoş Geldiniz! 👋
-              </h2>
-              <p className="text-gray-600 text-sm sm:text-base lg:text-lg max-w-2xl mx-auto mb-6 sm:mb-8 px-4">
-                FlowCAD ile profesyonel tesisat projelerinizi kolayca çizin, 
-                düzenleyin ve yönetin.
-              </p>
-
-              {/* Feature Cards - Mobile Horizontal Scroll */}
-              <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-4 px-4 sm:px-0 sm:justify-center sm:flex-wrap snap-x snap-mandatory scrollbar-hide">
-                <div className="flex-shrink-0 snap-center bg-white/70 backdrop-blur-sm rounded-2xl p-4 sm:p-5 shadow-lg border border-white/50 w-[140px] sm:w-auto">
-                  <div className="text-3xl sm:text-4xl mb-2">📐</div>
-                  <h3 className="font-semibold text-gray-800 text-sm sm:text-base">DXF Desteği</h3>
-                  <p className="text-xs sm:text-sm text-gray-500 mt-1">AutoCAD uyumlu</p>
-                </div>
-                <div className="flex-shrink-0 snap-center bg-white/70 backdrop-blur-sm rounded-2xl p-4 sm:p-5 shadow-lg border border-white/50 w-[140px] sm:w-auto">
-                  <div className="text-3xl sm:text-4xl mb-2">🔧</div>
-                  <h3 className="font-semibold text-gray-800 text-sm sm:text-base">Kolay Çizim</h3>
-                  <p className="text-xs sm:text-sm text-gray-500 mt-1">Sezgisel araçlar</p>
-                </div>
-                <div className="flex-shrink-0 snap-center bg-white/70 backdrop-blur-sm rounded-2xl p-4 sm:p-5 shadow-lg border border-white/50 w-[140px] sm:w-auto">
-                  <div className="text-3xl sm:text-4xl mb-2">📊</div>
-                  <h3 className="font-semibold text-gray-800 text-sm sm:text-base">Raporlama</h3>
-                  <p className="text-xs sm:text-sm text-gray-500 mt-1">PDF & Excel</p>
-                </div>
-                <div className="flex-shrink-0 snap-center bg-white/70 backdrop-blur-sm rounded-2xl p-4 sm:p-5 shadow-lg border border-white/50 w-[140px] sm:w-auto">
-                  <div className="text-3xl sm:text-4xl mb-2">🎯</div>
-                  <h3 className="font-semibold text-gray-800 text-sm sm:text-base">Snap Sistemi</h3>
-                  <p className="text-xs sm:text-sm text-gray-500 mt-1">Hassas çizim</p>
-                </div>
-              </div>
-            </div>
+      <section className="py-16 sm:py-24">
+        <div className="max-w-5xl mx-auto px-6 text-center">
+          <h1 className="text-[40px] sm:text-[56px] font-semibold tracking-tight text-[#1d1d1f] leading-tight">
+            Profesyonel tesisat
+            <br />
+            <span className="bg-gradient-to-r from-[#0071e3] to-[#5856d6] bg-clip-text text-transparent">
+              çizim deneyimi.
+            </span>
+          </h1>
+          <p className="mt-6 text-[17px] sm:text-[21px] text-[#86868b] max-w-2xl mx-auto leading-relaxed">
+            DXF dosyalarını açın, düzenleyin ve kaydedin. 
+            AutoCAD uyumlu, modern ve hızlı.
+          </p>
+          <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
+            <button
+              onClick={handleNewProject}
+              className="px-8 py-3.5 bg-[#0071e3] text-white text-[17px] font-medium rounded-full hover:bg-[#0077ed] transition-all duration-200"
+            >
+              Başla
+            </button>
+            <a
+              href="#projeler"
+              className="px-8 py-3.5 text-[#0071e3] text-[17px] font-medium rounded-full hover:bg-[#0071e3]/5 transition-all duration-200"
+            >
+              Projelerime Git →
+            </a>
           </div>
         </div>
       </section>
 
       {/* ============================================
-          MAIN CONTENT - Projects Section
+          FEATURES - Simple Grid
           ============================================ */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8 sm:pb-12">
+      <section className="pb-16 sm:pb-24">
+        <div className="max-w-5xl mx-auto px-6">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            {[
+              { icon: '📐', title: 'DXF Desteği' },
+              { icon: '✏️', title: 'Kolay Düzenleme' },
+              { icon: '📊', title: 'Raporlama' },
+              { icon: '💾', title: 'Otomatik Kayıt' },
+            ].map((feature, i) => (
+              <div 
+                key={i}
+                className="bg-white rounded-2xl p-6 text-center border border-black/5 hover:shadow-lg transition-all duration-300"
+              >
+                <div className="text-3xl mb-3">{feature.icon}</div>
+                <div className="text-[15px] font-medium text-[#1d1d1f]">{feature.title}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ============================================
+          PROJECTS SECTION
+          ============================================ */}
+      <main id="projeler" className="max-w-5xl mx-auto px-6 pb-16 sm:pb-24">
         
         {/* Error State */}
         {error && (
-          <div className="mb-6 bg-amber-50 border border-amber-200 rounded-2xl p-4 sm:p-5">
-            <div className="flex items-start gap-3">
-              <div className="flex-shrink-0 w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center">
-                <span className="text-xl">⚠️</span>
-              </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="text-sm font-semibold text-amber-800">Bağlantı Uyarısı</h3>
-                <p className="mt-1 text-sm text-amber-700">{error}</p>
-                <p className="mt-2 text-xs text-amber-600">
-                  API bağlantısı kurulamadı. Yine de yeni proje oluşturabilirsiniz.
-                </p>
-              </div>
-            </div>
+          <div className="mb-8 bg-[#fff8e5] rounded-2xl p-5 border border-[#f5d565]">
+            <p className="text-[15px] text-[#946800]">{error}</p>
           </div>
         )}
 
         {/* Section Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-          <div>
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-900">📁 Projelerim</h2>
-            <p className="text-sm text-gray-500 mt-1">
-              {projects.length > 0 
-                ? `${projects.length} proje bulundu` 
-                : 'Henüz proje oluşturulmadı'}
-            </p>
-          </div>
-          
-          {/* Mobile New Project Button */}
-          <button
-            onClick={handleNewProject}
-            className="md:hidden w-full sm:w-auto px-5 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl font-medium shadow-lg flex items-center justify-center gap-2"
-          >
-            <span>➕</span>
-            <span>Yeni Proje</span>
-          </button>
+        <div className="mb-8">
+          <h2 className="text-[28px] font-semibold text-[#1d1d1f]">Projelerim</h2>
+          <p className="text-[15px] text-[#86868b] mt-1">
+            {projects.length > 0 
+              ? `${projects.length} proje` 
+              : 'Henüz proje yok'}
+          </p>
         </div>
 
         {/* Empty State */}
         {projects.length === 0 && !error && (
-          <div className="text-center py-12 sm:py-16 lg:py-20 bg-white/50 backdrop-blur-sm rounded-3xl border-2 border-dashed border-gray-200">
-            <div className="max-w-md mx-auto px-4">
-              <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-lg">
-                <span className="text-4xl sm:text-5xl">📋</span>
-              </div>
-              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">
-                Henüz proje yok
-              </h3>
-              <p className="text-gray-500 text-sm sm:text-base mb-6">
-                İlk tesisat projenizi oluşturarak FlowCAD'in güçlü özelliklerini keşfedin.
-              </p>
-              <button
-                onClick={handleNewProject}
-                className="px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl hover:from-blue-600 hover:to-indigo-700 transition-all font-medium shadow-lg shadow-blue-500/25 inline-flex items-center gap-2"
-              >
-                <span>🚀</span>
-                <span>İlk Projeyi Oluştur</span>
-              </button>
+          <div className="text-center py-20 bg-white rounded-3xl border border-black/5">
+            <div className="w-16 h-16 bg-[#f5f5f7] rounded-full flex items-center justify-center mx-auto mb-6">
+              <span className="text-3xl">📁</span>
             </div>
+            <h3 className="text-[21px] font-semibold text-[#1d1d1f] mb-2">
+              Proje bulunamadı
+            </h3>
+            <p className="text-[15px] text-[#86868b] mb-8 max-w-sm mx-auto">
+              İlk projenizi oluşturarak başlayın.
+            </p>
+            <button
+              onClick={handleNewProject}
+              className="px-6 py-3 bg-[#0071e3] text-white text-[15px] font-medium rounded-full hover:bg-[#0077ed] transition-all duration-200"
+            >
+              Proje Oluştur
+            </button>
           </div>
         )}
 
-        {/* Projects Grid - Responsive */}
+        {/* Projects Grid */}
         {projects.length > 0 && (
-          <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             {projects.map(project => (
               <div 
                 key={project.id}
-                className="group bg-white/70 backdrop-blur-sm border border-gray-100 rounded-2xl p-5 sm:p-6 hover:shadow-xl hover:shadow-blue-500/10 hover:border-blue-200 transition-all duration-300 cursor-pointer active:scale-[0.98]"
+                className="group bg-white rounded-2xl p-6 border border-black/5 hover:shadow-xl hover:shadow-black/5 transition-all duration-300 cursor-pointer"
                 onClick={() => onSelect(project)}
               >
-                {/* Card Header */}
                 <div className="flex items-start justify-between mb-4">
-                  <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                    <span className="text-2xl sm:text-3xl">📁</span>
+                  <div className="w-12 h-12 bg-gradient-to-br from-[#0071e3] to-[#5856d6] rounded-xl flex items-center justify-center">
+                    <span className="text-white text-xl">📁</span>
                   </div>
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       handleDelete(project.id);
                     }}
-                    className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all opacity-0 group-hover:opacity-100 sm:opacity-100"
-                    title="Projeyi Sil"
+                    className="p-2 text-[#86868b] hover:text-red-500 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"
                   >
-                    <span className="text-lg">🗑️</span>
+                    ✕
                   </button>
                 </div>
                 
-                {/* Card Content */}
-                <h3 className="font-bold text-base sm:text-lg text-gray-900 mb-2 group-hover:text-blue-600 transition-colors line-clamp-1">
+                <h3 className="text-[17px] font-semibold text-[#1d1d1f] mb-1 truncate">
                   {project.name}
                 </h3>
                 
-                <p className="text-gray-500 text-sm mb-4 line-clamp-2 min-h-[2.5rem]">
-                  {project.description || 'Açıklama eklenmemiş'}
+                <p className="text-[13px] text-[#86868b] line-clamp-2 min-h-[2rem]">
+                  {project.description || 'Açıklama yok'}
                 </p>
                 
-                {/* Card Footer */}
-                <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                  <div className="flex items-center gap-2 text-xs text-gray-400">
-                    <span>📅</span>
-                    <span>
-                      {new Date(project.updatedAt).toLocaleDateString('tr-TR', {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric'
-                      })}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1 text-blue-500 text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">
-                    <span>Aç</span>
-                    <span>→</span>
-                  </div>
+                <div className="mt-4 pt-4 border-t border-black/5 text-[13px] text-[#86868b]">
+                  {new Date(project.updatedAt).toLocaleDateString('tr-TR', {
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric'
+                  })}
                 </div>
               </div>
             ))}
@@ -344,25 +267,17 @@ export const ProjectList: React.FC<ProjectListProps> = ({ onSelect }) => {
       </main>
 
       {/* ============================================
-          FOOTER - Simple Footer
+          FOOTER - Minimal
           ============================================ */}
-      <footer className="bg-white/50 backdrop-blur-sm border-t border-gray-100 mt-auto">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
-            <p className="text-sm text-gray-500">
-              © 2024 FlowCAD - Tesisat Çizim Uygulaması
+      <footer className="border-t border-black/5 bg-[#f5f5f7]">
+        <div className="max-w-5xl mx-auto px-6 py-8">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p className="text-[12px] text-[#86868b]">
+              © 2024 FlowCAD
             </p>
-            <div className="flex items-center gap-4 text-sm text-gray-400">
-              <span className="flex items-center gap-1">
-                <span>🔧</span>
-                <span>v1.0</span>
-              </span>
-              <span className="hidden sm:inline">|</span>
-              <span className="flex items-center gap-1">
-                <span>💻</span>
-                <span>Made with ❤️</span>
-              </span>
-            </div>
+            <p className="text-[12px] text-[#86868b]">
+              v1.0 • AutoCAD Uyumlu
+            </p>
           </div>
         </div>
       </footer>

@@ -166,9 +166,17 @@ export const EditorPage: React.FC = () => {
   // ============================================
 
   return (
-    <div className="h-screen flex flex-col bg-gray-100">
+    <div className="h-screen flex flex-col bg-[#fafafa]">
       {/* Toast Notifications */}
-      <Toaster position="top-center" />
+      <Toaster position="top-center" toastOptions={{
+        style: {
+          background: '#1d1d1f',
+          color: '#fff',
+          borderRadius: '12px',
+          fontSize: '14px',
+          padding: '12px 20px',
+        },
+      }} />
 
       {/* Toolbar */}
       <EnhancedToolbar
@@ -180,123 +188,102 @@ export const EditorPage: React.FC = () => {
         onOpenDXF={() => setShowDWGUploader(true)}
       />
 
-      {/* Secondary Toolbar - AutoCAD Style */}
-      <div className="bg-gray-800 border-b border-gray-700 px-3 py-1.5 flex items-center gap-2">
+      {/* Secondary Toolbar - Apple Style (Clean & Minimal) */}
+      <div className="bg-[#f5f5f7] border-b border-black/5 px-4 py-1.5 flex items-center gap-3">
         <button
           onClick={() => setShowLayerManager(true)}
-          className="px-3 py-1.5 bg-gray-700 text-gray-200 rounded hover:bg-gray-600 transition-colors text-sm flex items-center gap-2"
-          title="Katman Yöneticisi"
+          className="px-3 py-1 text-[12px] font-medium text-[#86868b] hover:text-[#1d1d1f] hover:bg-white/60 rounded-md transition-all"
         >
-          <span>📑</span>
-          <span className="hidden sm:inline">Katmanlar</span>
+          Katmanlar
         </button>
         <button
           onClick={() => setShowDXFEditor(true)}
-          className="px-3 py-1.5 bg-gray-700 text-gray-200 rounded hover:bg-gray-600 transition-colors text-sm flex items-center gap-2"
-          title="DXF Entity Düzenleyici"
+          className="px-3 py-1 text-[12px] font-medium text-[#86868b] hover:text-[#1d1d1f] hover:bg-white/60 rounded-md transition-all"
         >
-          <span>✏️</span>
-          <span className="hidden sm:inline">DXF Düzenle</span>
+          DXF Düzenle
         </button>
         <button
           onClick={handleExportDXF}
-          className="px-3 py-1.5 bg-green-700 text-gray-200 rounded hover:bg-green-600 transition-colors text-sm flex items-center gap-2"
-          title="DXF Olarak Dışa Aktar"
+          className="px-3 py-1 text-[12px] font-medium text-[#0071e3] hover:bg-[#0071e3]/10 rounded-md transition-all"
         >
-          <span>📤</span>
-          <span className="hidden sm:inline">DXF Dışa Aktar</span>
+          Dışa Aktar
         </button>
         <button
           onClick={handleLoadProject}
-          className="px-3 py-1.5 bg-purple-700 text-gray-200 rounded hover:bg-purple-600 transition-colors text-sm flex items-center gap-2"
-          title="Proje Yükle"
+          className="px-3 py-1 text-[12px] font-medium text-[#86868b] hover:text-[#1d1d1f] hover:bg-white/60 rounded-md transition-all"
         >
-          <span>📁</span>
-          <span className="hidden sm:inline">Proje Yükle</span>
+          Proje Yükle
         </button>
-        <div className="h-5 w-px bg-gray-600" />
-        {/* Undo/Redo Buttons */}
+        
+        <div className="w-px h-4 bg-black/10" />
+        
+        {/* Undo/Redo */}
         <button
           onClick={() => {
             if (historyIndex >= 0) {
               undo();
-              toast.success('Geri alındı', { duration: 1500, icon: '↩️' });
-            } else {
-              toast.error('Geri alınacak işlem yok', { duration: 1500 });
+              toast.success('Geri alındı', { duration: 1500 });
             }
           }}
-          className={`px-3 py-1.5 rounded transition-colors text-sm flex items-center gap-2 ${
-            historyIndex >= 0 ? 'bg-indigo-700 text-gray-200 hover:bg-indigo-600' : 'bg-gray-700 text-gray-400 cursor-not-allowed'
+          className={`px-2 py-1 text-[12px] rounded-md transition-all ${
+            historyIndex >= 0 ? 'text-[#1d1d1f] hover:bg-white/60' : 'text-[#c7c7cc]'
           }`}
-          title="Geri Al (Ctrl+Z)"
           disabled={historyIndex < 0}
         >
-          <span>↩️</span>
-          <span className="hidden sm:inline">Geri Al</span>
+          ↶ Geri
         </button>
         <button
           onClick={() => {
             if (historyIndex < history.length - 1) {
               redo();
-              toast.success('Yinelendi', { duration: 1500, icon: '↪️' });
-            } else {
-              toast.error('Yinelenecek işlem yok', { duration: 1500 });
+              toast.success('Yinelendi', { duration: 1500 });
             }
           }}
-          className={`px-3 py-1.5 rounded transition-colors text-sm flex items-center gap-2 ${
-            historyIndex < history.length - 1 ? 'bg-purple-700 text-gray-200 hover:bg-purple-600' : 'bg-gray-700 text-gray-400 cursor-not-allowed'
+          className={`px-2 py-1 text-[12px] rounded-md transition-all ${
+            historyIndex < history.length - 1 ? 'text-[#1d1d1f] hover:bg-white/60' : 'text-[#c7c7cc]'
           }`}
-          title="Yinele (Ctrl+Y)"
           disabled={historyIndex >= history.length - 1}
         >
-          <span>↪️</span>
-          <span className="hidden sm:inline">Yinele</span>
+          Yinele ↷
         </button>
         <button
           onClick={() => setShowUndoRedoPanel(true)}
-          className="px-3 py-1.5 bg-gray-700 text-gray-200 rounded hover:bg-gray-600 transition-colors text-sm flex items-center gap-2"
-          title="İşlem Geçmişi"
+          className="px-2 py-1 text-[12px] text-[#86868b] hover:text-[#1d1d1f] hover:bg-white/60 rounded-md transition-all"
         >
-          <span>📜</span>
-          <span className="hidden sm:inline">Geçmiş</span>
+          Geçmiş
         </button>
-        <div className="h-5 w-px bg-gray-600" />
-        {/* Measure Tool Button */}
+        
+        <div className="w-px h-4 bg-black/10" />
+        
+        {/* Measure Tool */}
         <button
           onClick={() => setShowMeasureTool(!showMeasureTool)}
-          className={`px-3 py-1.5 rounded transition-colors text-sm flex items-center gap-2 ${
-            showMeasureTool ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-200 hover:bg-gray-600'
+          className={`px-3 py-1 text-[12px] font-medium rounded-md transition-all ${
+            showMeasureTool ? 'bg-[#0071e3] text-white' : 'text-[#86868b] hover:text-[#1d1d1f] hover:bg-white/60'
           }`}
-          title="Ölçü Aracı (M)"
         >
-          <span>📏</span>
-          <span className="hidden sm:inline">Ölçü</span>
+          Ölçü
         </button>
-        <div className="h-5 w-px bg-gray-600" />
         <button
           onClick={() => setShowCoordinates(!showCoordinates)}
-          className={`px-3 py-1.5 rounded transition-colors text-sm flex items-center gap-2 ${
-            showCoordinates ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-200 hover:bg-gray-600'
+          className={`px-3 py-1 text-[12px] font-medium rounded-md transition-all ${
+            showCoordinates ? 'bg-[#0071e3] text-white' : 'text-[#86868b] hover:text-[#1d1d1f] hover:bg-white/60'
           }`}
-          title="Koordinat Göstergesi"
         >
-          <span>📍</span>
-          <span className="hidden sm:inline">Koordinatlar</span>
+          Koordinat
         </button>
         <button
           onClick={() => setShowCommandLine(!showCommandLine)}
-          className={`px-3 py-1.5 rounded transition-colors text-sm flex items-center gap-2 ${
-            showCommandLine ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-200 hover:bg-gray-600'
+          className={`px-3 py-1 text-[12px] font-medium rounded-md transition-all ${
+            showCommandLine ? 'bg-[#0071e3] text-white' : 'text-[#86868b] hover:text-[#1d1d1f] hover:bg-white/60'
           }`}
-          title="Komut Satırı"
         >
-          <span>⌨️</span>
-          <span className="hidden sm:inline">Komut Satırı</span>
+          Komut
         </button>
+        
         <div className="flex-1" />
-        <div className="text-xs text-gray-400 hidden md:block">
-          FlowCAD v1.0 | AutoCAD Uyumlu
-        </div>
+        
+        <span className="text-[11px] text-[#86868b]">FlowCAD v1.0</span>
       </div>
 
       {/* Main 3D Canvas Area */}
@@ -389,52 +376,35 @@ export const EditorPage: React.FC = () => {
           </div>
         )}
 
-        {/* Keyboard Shortcuts Help - Updated */}
-        <div className="absolute bottom-4 right-4 bg-white/95 backdrop-blur-md rounded-xl shadow-2xl p-4 text-xs border border-gray-200 z-30 max-w-xs">
-          <div className="font-bold text-gray-800 mb-3 text-sm flex items-center gap-2">
-            <span className="text-lg">⌨️</span>
-            <span>Klavye Kısayolları</span>
+        {/* Keyboard Shortcuts Help - Apple Style (Clean & Minimal) */}
+        <div className="absolute bottom-4 right-4 bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl p-4 text-[12px] border border-black/5 z-30 max-w-[200px]">
+          <div className="font-semibold text-[#1d1d1f] mb-3 text-[13px]">
+            Kısayollar
           </div>
-          <div className="space-y-1.5 text-gray-700">
-            <div className="flex items-center gap-2">
-              <kbd className="px-2 py-1 bg-gray-100 rounded border text-xs">Ctrl+S</kbd>
+          <div className="space-y-2 text-[#86868b]">
+            <div className="flex justify-between">
               <span>Kaydet</span>
+              <kbd className="text-[11px] bg-[#f5f5f7] px-1.5 py-0.5 rounded">⌘S</kbd>
             </div>
-            <div className="flex items-center gap-2">
-              <kbd className="px-2 py-1 bg-gray-100 rounded border text-xs">Ctrl+O</kbd>
-              <span>DXF Aç</span>
+            <div className="flex justify-between">
+              <span>Aç</span>
+              <kbd className="text-[11px] bg-[#f5f5f7] px-1.5 py-0.5 rounded">⌘O</kbd>
             </div>
-            <div className="flex items-center gap-2">
-              <kbd className="px-2 py-1 bg-indigo-50 rounded border text-xs">Ctrl+Z</kbd>
+            <div className="flex justify-between">
               <span>Geri Al</span>
+              <kbd className="text-[11px] bg-[#f5f5f7] px-1.5 py-0.5 rounded">⌘Z</kbd>
             </div>
-            <div className="flex items-center gap-2">
-              <kbd className="px-2 py-1 bg-purple-50 rounded border text-xs">Ctrl+Y</kbd>
+            <div className="flex justify-between">
               <span>Yinele</span>
+              <kbd className="text-[11px] bg-[#f5f5f7] px-1.5 py-0.5 rounded">⌘Y</kbd>
             </div>
-            <div className="flex items-center gap-2">
-              <kbd className="px-2 py-1 bg-blue-50 rounded border text-xs">M</kbd>
-              <span>Ölçü Aracı</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <kbd className="px-2 py-1 bg-gray-100 rounded border text-xs">L</kbd>
-              <span>Boru (Line)</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <kbd className="px-2 py-1 bg-gray-100 rounded border text-xs">V</kbd>
-              <span>Vana</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <kbd className="px-2 py-1 bg-orange-50 rounded border text-xs">S</kbd>
-              <span>Snap Panel</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <kbd className="px-2 py-1 bg-gray-100 rounded border text-xs">Esc</kbd>
-              <span>İptal</span>
+            <div className="flex justify-between">
+              <span>Ölçü</span>
+              <kbd className="text-[11px] bg-[#f5f5f7] px-1.5 py-0.5 rounded">M</kbd>
             </div>
           </div>
-          <div className="mt-3 pt-2 border-t border-gray-200 text-gray-500">
-            💡 Komut satırına "HELP" yazın
+          <div className="mt-3 pt-2 border-t border-black/5 text-[11px] text-[#86868b]">
+            "HELP" yazarak tümünü görün
           </div>
         </div>
       </div>

@@ -1,9 +1,6 @@
 // ============================================
-// ENHANCED TOOLBAR - Gelişmiş Araç Çubuğu
+// ENHANCED TOOLBAR - Apple-Inspired Minimal Design
 // Konum: frontend/src/components/EnhancedToolbar.tsx
-// SNAP sistemi toggle butonu eklendi
-// Son güncelleme: 2025-01-19 12:07:28 UTC
-// Geliştirici: @ibrahimkemalkoyuncu
 // ============================================
 
 import React, { useEffect, useState } from 'react';
@@ -19,8 +16,8 @@ interface EnhancedToolbarProps {
   onShowBuilding?: () => void;
   onShowProjectManager?: () => void;
   onNewProject?: () => void;
-  onShowSnapPanel?: () => void;  // 🎯 YENİ: Snap panel toggle
-  onOpenDXF?: () => void;  // 🎯 YENİ: DXF dosyası açma
+  onShowSnapPanel?: () => void;
+  onOpenDXF?: () => void;
 }
 
 // ============================================
@@ -37,10 +34,6 @@ export const EnhancedToolbar: React.FC<EnhancedToolbarProps> = ({
   onOpenDXF
 }) => {
   
-  // ============================================
-  // STORE - Zustand State
-  // ============================================
-  
   const { 
     mode, 
     setMode, 
@@ -56,90 +49,35 @@ export const EnhancedToolbar: React.FC<EnhancedToolbarProps> = ({
     clearTempPoints
   } = useDrawingStore();
   
-  // Local state - Snap panel açık mı?
   const [isSnapPanelOpen, setIsSnapPanelOpen] = useState(false);
   
-  // ============================================
-  // TOOL DEFINITIONS - Araç Tanımları
-  // ============================================
-  
+  // Tool definitions - minimal icons
   const tools = [
-    { id: 'select', name: 'Seç', icon: '👆', shortcut: 'V', color: 'blue' },
-    { id: 'pipe', name: 'Boru', icon: '│', shortcut: 'P', color: 'blue' },
-    { id: 'valve', name: 'Vana', icon: '⊗', shortcut: 'A', color: 'blue' },
-    { id: 'meter', name: 'Sayaç', icon: '⊞', shortcut: 'M', color: 'blue' },
-    { id: 'boiler', name: 'Kombi', icon: '⊡', shortcut: 'B', color: 'blue' },
-    { id: 'delete', name: 'Sil', icon: '🗑️', shortcut: 'D', color: 'red' },
+    { id: 'select', name: 'Seç', icon: '↖', shortcut: 'V' },
+    { id: 'pipe', name: 'Boru', icon: '━', shortcut: 'P' },
+    { id: 'valve', name: 'Vana', icon: '◉', shortcut: 'A' },
+    { id: 'meter', name: 'Sayaç', icon: '▣', shortcut: 'M' },
+    { id: 'boiler', name: 'Kombi', icon: '▢', shortcut: 'B' },
+    { id: 'delete', name: 'Sil', icon: '×', shortcut: 'D' },
   ];
   
-  // Boru çapları listesi
   const diameters = ['1/2"', '3/4"', '1"', '1 1/4"', '1 1/2"', '2"'];
   
-  // ============================================
-  // KEYBOARD SHORTCUTS - Klavye Kısayolları
-  // ============================================
-  
+  // Keyboard shortcuts
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
-      
-      // ============================================
-      // CTRL/CMD KOMBINASYONLARI
-      // ============================================
-      
       if (e.ctrlKey || e.metaKey) {
-        if (e.key === 'z') {
-          e.preventDefault();
-          undo();
-        } else if (e.key === 'y') {
-          e.preventDefault();
-          redo();
-        } else if (e.key === 's') {
-          e.preventDefault();
-          if (onShowProjectManager) onShowProjectManager();
-        } else if (e.key === 'o') {
-          e.preventDefault();
-          if (onOpenDXF) onOpenDXF();
-        } else if (e.key === 'n') {
-          e.preventDefault();
-          if (onNewProject) onNewProject();
-        }
-      } 
-      
-      // ============================================
-      // NORMAL KISAYOLLAR
-      // ============================================
-      
-      else {
-        // Araç kısayolları (V, P, A, M, B, D)
+        if (e.key === 'z') { e.preventDefault(); undo(); }
+        else if (e.key === 'y') { e.preventDefault(); redo(); }
+        else if (e.key === 's') { e.preventDefault(); if (onShowProjectManager) onShowProjectManager(); }
+        else if (e.key === 'o') { e.preventDefault(); if (onOpenDXF) onOpenDXF(); }
+        else if (e.key === 'n') { e.preventDefault(); if (onNewProject) onNewProject(); }
+      } else {
         const tool = tools.find(t => t.shortcut.toLowerCase() === e.key.toLowerCase());
-        if (tool) {
-          setMode(tool.id as any);
-          clearTempPoints();
-        }
-        
-        // 🎯 SNAP KISAYOLLARI
-        if (e.key === 's' || e.key === 'S') {
-          setIsSnapPanelOpen(!isSnapPanelOpen);
-          if (onShowSnapPanel) onShowSnapPanel();
-        }
-        if (e.key === 'g' || e.key === 'G') {
-          toggleSnap('snapToGrid');
-        }
-        if (e.key === 'e' || e.key === 'E') {
-          toggleSnap('snapToEndpoints');
-        }
-        if (e.key === 'q' || e.key === 'Q') {
-          toggleSnap('snapToMidpoints');
-        }
-        if (e.key === 'i' || e.key === 'I') {
-          toggleSnap('snapToIntersections');
-        }
-        
-        // Escape - İptal
-        if (e.key === 'Escape') {
-          setMode('select');
-          clearTempPoints();
-        }
+        if (tool) { setMode(tool.id as any); clearTempPoints(); }
+        if (e.key === 's' || e.key === 'S') { setIsSnapPanelOpen(!isSnapPanelOpen); if (onShowSnapPanel) onShowSnapPanel(); }
+        if (e.key === 'g') toggleSnap('snapToGrid');
+        if (e.key === 'Escape') { setMode('select'); clearTempPoints(); }
       }
     };
     
@@ -147,290 +85,169 @@ export const EnhancedToolbar: React.FC<EnhancedToolbarProps> = ({
     return () => window.removeEventListener('keydown', handleKeyPress);
   }, [undo, redo, setMode, toggleSnap, clearTempPoints, isSnapPanelOpen, onShowSnapPanel, onShowProjectManager, onNewProject, onOpenDXF]);
   
-  // ============================================
-  // EVENT HANDLERS
-  // ============================================
-  
-  /**
-   * Tümünü temizle - Onay ister
-   */
   const handleClearAll = () => {
     if (confirm('Tüm çizimleri silmek istediğinizden emin misiniz?')) {
       clearAll();
     }
   };
   
-  // Toplam boru uzunluğu hesapla
   const totalLength = pipes.reduce((sum, pipe) => sum + (pipe.length || 0), 0);
   
-  // Aktif snap sayısı
-  const activeSnapsCount = [
-    snapSettings.snapToEndpoints,
-    snapSettings.snapToMidpoints,
-    snapSettings.snapToIntersections,
-    snapSettings.snapToCenter,
-    snapSettings.snapToGrid
-  ].filter(Boolean).length;
-  
   // ============================================
-  // RENDER
+  // RENDER - Apple-Inspired Design
   // ============================================
   
   return (
-    <div className="bg-white border-b shadow-sm">
+    <div className="bg-white/95 backdrop-blur-xl border-b border-black/5">
       
-      {/* ============================================
-          MAIN TOOLBAR - Ana Toolbar
-          ============================================ */}
-      
-      <div className="flex items-center justify-between p-3 gap-4">
+      {/* Main Toolbar */}
+      <div className="flex items-center justify-between px-4 h-12 gap-3">
         
-        {/* ============================================
-            SOL - Dosya İşlemleri
-            ============================================ */}
+        {/* Left - File Actions */}
+        <div className="flex items-center gap-1">
+          {onNewProject && (
+            <button
+              onClick={onNewProject}
+              className="px-3 py-1.5 text-[13px] font-medium text-[#1d1d1f] hover:bg-black/5 rounded-lg transition-all"
+            >
+              Yeni
+            </button>
+          )}
+          {onOpenDXF && (
+            <button
+              onClick={onOpenDXF}
+              className="px-3 py-1.5 text-[13px] font-medium text-[#1d1d1f] hover:bg-black/5 rounded-lg transition-all"
+            >
+              Aç
+            </button>
+          )}
+          {onShowProjectManager && (
+            <button
+              onClick={onShowProjectManager}
+              className="px-3 py-1.5 text-[13px] font-medium text-[#1d1d1f] hover:bg-black/5 rounded-lg transition-all"
+            >
+              Kaydet
+            </button>
+          )}
+        </div>
         
-        {(onNewProject || onShowProjectManager || onOpenDXF) && (
-          <div className="flex gap-2">
-            {onNewProject && (
-              <button
-                onClick={onNewProject}
-                className="px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded transition-colors text-sm font-medium"
-                title="Yeni Proje (Ctrl+N)"
-              >
-                📄 Yeni
-              </button>
-            )}
-            
-            {onOpenDXF && (
-              <button
-                onClick={onOpenDXF}
-                className="px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded transition-colors text-sm font-medium"
-                title="DXF Dosyası Aç (Ctrl+O)"
-              >
-                📂 Aç
-              </button>
-            )}
-            
-            {onShowProjectManager && (
-              <button
-                onClick={onShowProjectManager}
-                className="px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded transition-colors text-sm font-medium"
-                title="Kaydet (Ctrl+S)"
-              >
-                💾 Kaydet
-              </button>
-            )}
-          </div>
-        )}
-        
-        {/* ============================================
-            ORTA - Çizim Araçları
-            ============================================ */}
-        
-        <div className="flex gap-1">
+        {/* Center - Drawing Tools */}
+        <div className="flex items-center bg-[#f5f5f7] rounded-lg p-0.5">
           {tools.map(tool => (
             <button
               key={tool.id}
-              onClick={() => {
-                setMode(tool.id as any);
-                clearTempPoints();
-              }}
+              onClick={() => { setMode(tool.id as any); clearTempPoints(); }}
               className={`
-                px-4 py-2 rounded transition-all font-medium
+                px-3 py-1.5 rounded-md text-[13px] font-medium transition-all
                 ${mode === tool.id 
-                  ? 'bg-blue-500 text-white shadow-md' 
-                  : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                  ? 'bg-white text-[#1d1d1f] shadow-sm' 
+                  : 'text-[#86868b] hover:text-[#1d1d1f]'
                 }
               `}
               title={`${tool.name} (${tool.shortcut})`}
             >
-              <span className="text-lg">{tool.icon}</span>
-              <span className="ml-2 text-sm">{tool.name}</span>
+              <span className="text-base mr-1">{tool.icon}</span>
+              <span className="hidden sm:inline">{tool.name}</span>
             </button>
           ))}
         </div>
         
-        {/* ============================================
-            ÇAP SEÇİCİ - Boru modunda görünür
-            ============================================ */}
-        
-        {mode === 'pipe' && (
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-600 font-medium">Çap:</span>
+        {/* Right - Actions */}
+        <div className="flex items-center gap-2">
+          
+          {/* Diameter Selector */}
+          {mode === 'pipe' && (
             <select
               value={currentDiameter}
               onChange={(e) => setCurrentDiameter(e.target.value)}
-              className="px-3 py-1.5 border border-gray-300 rounded bg-white text-sm font-medium focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="px-2 py-1 text-[13px] bg-[#f5f5f7] border-0 rounded-lg focus:ring-2 focus:ring-[#0071e3]"
             >
               {diameters.map(d => (
                 <option key={d} value={d}>{d}</option>
               ))}
             </select>
-          </div>
-        )}
-        
-        {/* ============================================
-            SAĞ - Özel Butonlar
-            ============================================ */}
-        
-        <div className="flex gap-2">
+          )}
           
-          {/* Bina Yönetimi */}
+          {/* Building */}
           {onShowBuilding && (
             <button
               onClick={onShowBuilding}
-              className="px-4 py-2 bg-indigo-100 text-indigo-700 rounded hover:bg-indigo-200 transition-colors font-medium"
-              title="Bina Yönetimi (K)"
+              className="px-3 py-1.5 text-[13px] font-medium text-[#86868b] hover:text-[#1d1d1f] hover:bg-black/5 rounded-lg transition-all"
             >
-              <span className="text-lg">🏢</span>
-              <span className="ml-2 text-sm">Bina</span>
+              Bina
             </button>
           )}
           
-          {/* Klavuz Panel */}
+          {/* Blueprint */}
           <button
             onClick={onShowBlueprints}
-            className="px-4 py-2 bg-purple-100 text-purple-700 rounded hover:bg-purple-200 transition-colors font-medium"
-            title="Klavuz Paneli"
+            className="px-3 py-1.5 text-[13px] font-medium text-[#86868b] hover:text-[#1d1d1f] hover:bg-black/5 rounded-lg transition-all"
           >
-            <span className="text-lg">📋</span>
-            <span className="ml-2 text-sm">Klavuz</span>
+            Klavuz
           </button>
           
-          {/* ============================================
-              🎯 SNAP PANEL TOGGLE - Yeni Özellik
-              ============================================ */}
-          
+          {/* Snap */}
           <button
-            onClick={() => {
-              setIsSnapPanelOpen(!isSnapPanelOpen);
-              if (onShowSnapPanel) onShowSnapPanel();
-            }}
+            onClick={() => { setIsSnapPanelOpen(!isSnapPanelOpen); if (onShowSnapPanel) onShowSnapPanel(); }}
             className={`
-              px-4 py-2 rounded transition-all font-medium relative
-              ${snapSettings.enabled
-                ? 'bg-orange-500 text-white shadow-md'
-                : 'bg-orange-100 text-orange-700 hover:bg-orange-200'
-              }
+              px-3 py-1.5 text-[13px] font-medium rounded-lg transition-all
+              ${snapSettings.enabled ? 'bg-[#0071e3] text-white' : 'text-[#86868b] hover:text-[#1d1d1f] hover:bg-black/5'}
             `}
-            title="Snap Ayarları (S)"
           >
-            <span className="text-lg">🧲</span>
-            <span className="ml-2 text-sm">Snap</span>
-            
-            {/* Durum badge'i */}
-            {snapSettings.enabled && (
-              <span className="ml-1 text-xs bg-white/30 px-1.5 py-0.5 rounded">
-                {activeSnapsCount}
-              </span>
-            )}
-            
-            {/* Aktif göstergesi */}
-            {snapSettings.enabled && (
-              <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-white"></span>
-            )}
+            Snap {snapSettings.enabled && '✓'}
           </button>
           
           {/* Undo/Redo */}
-          <button
-            onClick={undo}
-            className="px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded transition-colors"
-            title="Geri Al (Ctrl+Z)"
-          >
-            ↶ Geri
-          </button>
-          <button
-            onClick={redo}
-            className="px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded transition-colors"
-            title="İleri Al (Ctrl+Y)"
-          >
-            ↷ İleri
-          </button>
+          <div className="flex items-center gap-0.5 bg-[#f5f5f7] rounded-lg p-0.5">
+            <button
+              onClick={undo}
+              className="p-1.5 text-[#86868b] hover:text-[#1d1d1f] rounded transition-all"
+              title="Geri Al (Ctrl+Z)"
+            >
+              ↶
+            </button>
+            <button
+              onClick={redo}
+              className="p-1.5 text-[#86868b] hover:text-[#1d1d1f] rounded transition-all"
+              title="İleri Al (Ctrl+Y)"
+            >
+              ↷
+            </button>
+          </div>
           
-          {/* Temizle */}
+          {/* Clear */}
           <button
             onClick={handleClearAll}
-            className="px-3 py-2 bg-red-100 text-red-700 hover:bg-red-200 rounded transition-colors"
-            title="Tümünü Temizle"
+            className="px-3 py-1.5 text-[13px] font-medium text-red-500 hover:bg-red-50 rounded-lg transition-all"
           >
-            🗑️ Temizle
+            Temizle
           </button>
           
-          {/* Malzeme Listesi */}
+          {/* Materials - Primary Action */}
           <button
             onClick={onShowMaterials}
-            className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors font-medium shadow-sm"
-            title="Malzeme Listesi"
+            className="px-4 py-1.5 bg-[#0071e3] text-white text-[13px] font-medium rounded-full hover:bg-[#0077ed] transition-all"
           >
-            📋 Malzeme Listesi
+            Malzeme
           </button>
         </div>
       </div>
       
-      {/* ============================================
-          STATUS BAR - Durum Çubuğu
-          ============================================ */}
-      
-      <div className="bg-gray-50 px-3 py-2 border-t flex gap-6 text-sm">
-        
-        {/* Aktif Mod */}
-        <div className="text-gray-600">
-          Mod: <span className="font-semibold text-gray-900">
-            {mode === 'select' && '👆 Seçim'}
-            {mode === 'pipe' && '🔧 Boru Çizimi'}
-            {mode === 'valve' && '⊗ Vana Ekleme'}
-            {mode === 'meter' && '⊞ Sayaç Ekleme'}
-            {mode === 'boiler' && '⊡ Kombi Ekleme'}
-            {mode === 'delete' && '🗑️ Silme'}
-          </span>
-        </div>
-        
-        {/* Boru Sayısı */}
-        <div className="text-gray-600">
-          Borular: <span className="font-semibold text-gray-900">{pipes.length}</span>
-        </div>
-        
-        {/* Cihaz Sayısı */}
-        <div className="text-gray-600">
-          Cihazlar: <span className="font-semibold text-gray-900">{components.length}</span>
-        </div>
-        
-        {/* Toplam Uzunluk */}
-        <div className="text-gray-600">
-          Toplam Uzunluk: <span className="font-semibold text-gray-900">{totalLength.toFixed(2)}m</span>
-        </div>
-        
-        {/* 🎯 SNAP DURUM GÖSTERGESİ */}
-        <div className="text-gray-600 flex items-center gap-2">
-          <span>Snap:</span>
-          <span className={`font-semibold flex items-center gap-1 ${snapSettings.enabled ? 'text-orange-600' : 'text-gray-400'}`}>
-            {snapSettings.enabled ? (
-              <>
-                <span>🧲</span>
-                <span>AÇIK</span>
-                <span className="text-xs bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded">
-                  {activeSnapsCount} aktif
-                </span>
-              </>
-            ) : (
-              <span>KAPALI</span>
-            )}
-          </span>
-        </div>
-        
-        {/* Seçili Çap (Boru modunda) */}
-        {mode === 'pipe' && (
-          <div className="text-gray-600">
-            Seçili Çap: <span className="font-semibold text-blue-600">{currentDiameter}</span>
-          </div>
-        )}
+      {/* Status Bar - Minimal */}
+      <div className="flex items-center gap-6 px-4 py-1.5 bg-[#f5f5f7] text-[11px] text-[#86868b]">
+        <span>
+          <strong className="text-[#1d1d1f]">{mode === 'select' ? 'Seçim' : mode === 'pipe' ? 'Boru' : mode === 'valve' ? 'Vana' : mode === 'meter' ? 'Sayaç' : mode === 'boiler' ? 'Kombi' : 'Silme'}</strong>
+        </span>
+        <span>Boru: <strong className="text-[#1d1d1f]">{pipes.length}</strong></span>
+        <span>Cihaz: <strong className="text-[#1d1d1f]">{components.length}</strong></span>
+        <span>Uzunluk: <strong className="text-[#1d1d1f]">{totalLength.toFixed(1)}m</strong></span>
+        {mode === 'pipe' && <span>Çap: <strong className="text-[#0071e3]">{currentDiameter}</strong></span>}
+        <span className="ml-auto">
+          Snap: <strong className={snapSettings.enabled ? 'text-[#0071e3]' : 'text-[#86868b]'}>{snapSettings.enabled ? 'Açık' : 'Kapalı'}</strong>
+        </span>
       </div>
     </div>
   );
 };
-
-// ============================================
-// EXPORT
-// ============================================
 
 export default EnhancedToolbar;
